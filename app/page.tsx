@@ -147,7 +147,7 @@ export default function HomePage() {
         {/* Status + Progress */}
         <div className="mt-6 text-center space-y-3">
           {loading && (
-            <img src="/static/loading.gif" alt="Cargando..." className="mx-auto h-8" />
+            <Image src="/loading.gif" alt="Cargando..." width={32} height={32} />
           )}
           <div className="text-gray-700 min-h-6">{status}</div>
 
