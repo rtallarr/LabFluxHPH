@@ -73,9 +73,9 @@ export default function HomePage() {
     <div className="bg-gray-100 min-h-screen">
       {/* Header */}
       <header className="bg-blue-900 text-white py-4 flex items-center justify-center gap-6">
-        <Image src="/gatosaludando.gif" alt="" width={64} height={64} />
+        <Image src="/gatosaludando.gif" alt="" width={64} height={64} unoptimized />
         <h1 className="text-4xl font-bold">LabFluxHPH</h1>
-        <Image src="/gatosaludando.gif" alt="" width={64} height={64} />
+        <Image src="/gatosaludando.gif" alt="" width={64} height={64} unoptimized />
       </header>
 
       {/* Main Card */}
@@ -147,7 +147,7 @@ export default function HomePage() {
         {/* Status + Progress */}
         <div className="mt-6 text-center space-y-3">
           {loading && (
-            <Image src="/loading.gif" alt="Cargando..." width={32} height={32} />
+            <Image src="/loading.gif" alt="Cargando..." width={32} height={32} unoptimized />
           )}
           <div className="text-gray-700 min-h-6">{status}</div>
 
