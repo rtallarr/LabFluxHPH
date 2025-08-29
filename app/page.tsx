@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 
 export default function HomePage() {
   const [files, setFiles] = useState<File[]>([]);
@@ -72,9 +73,9 @@ export default function HomePage() {
     <div className="bg-gray-100 min-h-screen">
       {/* Header */}
       <header className="bg-blue-900 text-white py-4 flex items-center justify-center gap-6">
-        <img src="gatosaludando.gif" alt="" className="h-16 w-16" />
+        <Image src="/gatosaludando.gif" alt="" width={64} height={64} />
         <h1 className="text-4xl font-bold">LabFluxHPH</h1>
-        <img src="gatosaludando.gif" alt="" className="h-16 w-16" />
+        <Image src="/gatosaludando.gif" alt="" width={64} height={64} />
       </header>
 
       {/* Main Card */}
