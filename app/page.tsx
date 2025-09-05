@@ -17,6 +17,12 @@ export default function HomePage() {
     const valid = Array.from(newFiles).filter(
       (f) => /\.pdf$/i.test(f.name) || /\.zip$/i.test(f.name)
     );
+
+    if (files.length + valid.length > 8) {
+      setStatus("⚠ No puedes subir más de 8 archivos.");
+      return;
+    }
+
     setFiles((prev) => [...prev, ...valid]);
   };
 
