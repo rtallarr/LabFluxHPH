@@ -14,22 +14,26 @@ async function parseLabPdf(buffer: Buffer) {
   const paciente = text.match(/PACIENTE\s*:\s*(.+)/i)?.[1]?.trim() || "";
   const identificacion = text.match(/IDENTIFICACION\s*:\s*(.+)/i)?.[1]?.trim() || "";
   const fechaNac = text.match(/FECHA NAC\.?\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4})/)?.[1]?.replace(/-/g, "/") || "";
-  const sexo = text.match(/SEXO\s*:\s*(FEMENINO|MASCULINO)/i)?.[1]?.trim() || "";
+  const sexo = text.match(/\b(FEMENINO|MASCULINO)\b/i)?.[1] || "";
   const nroOrden = text.match(/N° ORDEN\s*:\s*(\d+)/i)?.[1]?.trim() || "";
-  const edad = text.match(/EDAD\s*:\s*([\d]+)\s*años/i)?.[1] || "";
+  const edad = text.match(/(\d+)\s*años/i)?.[1] || "";
   const ingreso = text.match(/INGRESO\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4}\s+[\d]{2}:[\d]{2})/)?.[1]?.replace(/-/g, "/") || "";
   const tDeMuestra = text.match(/T\. DE MUESTRA\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4}\s+[\d]{2}:[\d]{2})/)?.[1]?.replace(/-/g, "/") || "";
   const recepcion = text.match(/RECEPCIÓN\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4}\s+[\d]{2}:[\d]{2})/)?.[1]?.replace(/-/g, "/") || "";
   const procedencia = text.match(/PROCEDENCIA\s*:\s*(.+)/i)?.[1]?.trim() || "";
   const area = text.match(/ÁREA\s*:\s*(.+)/i)?.[1]?.trim() || "";
-  const subprocedencia = text.match(/SUBPROCEDENCIA\s*:\s*(.+)/i)?.[1]?.trim() || "";
+  const subprocedencia = text.match(/([A-ZÁÉÍÓÚÑ0-9\s°]+)SUBPROCEDENCIA:/i)?.[1]?.trim() || "";
   const ficha = text.match(/FICHA\s*:\s*(\d+)/i)?.[1]?.trim() || "";
 
-  // Extract dates/times
-  const recepcionMatch = text.match(/RECEPCIÓN:\s*\n(?:.*\n){2}(\d{2}\/\d{2}\/\d{4}) (\d{2}:\d{2})/);
-  const fecha = recepcionMatch?.[1].replace(/-/g, "/");  // convert 04-09-2025 → 04/09/2025
+  //console.log("Paciente:", paciente, "identificaion:", identificacion, "fechaNac:", fechaNac, "sexo:", sexo, "nroOrden:", nroOrden,"edad:", edad,"ingreso:", ingreso,"tDeMuestra:", tDeMuestra,"recepcion:", recepcion,"procedencia:", procedencia,"area:", area,"subprocedencia:", subprocedencia,"ficha:", ficha);
 
-  const hora  = recepcionMatch?.[2] || "";
+  // Extract dates/times
+  const recepcionMatch = text.match(/RECEPCIÓN:[\s\S]*\n\d{2}[\/-]\d{2}[\/-]\d{4}\s\d{2}:\d{2}\n(\d{2}[\/-]\d{2}[\/-]\d{4})\s(\d{2}:\d{2})/);
+  const fecha = recepcionMatch?.[1].replace(/-/g, "/") || "";
+  const hora = recepcionMatch?.[2] || "";
+
+
+  console.log("Fecha:", fecha, "Hora:", hora);
 
   // PERFIL HEMATOLÓGICO
   const hto = text.match(/([\d.,]+)\s*%?\s*HEMATOCRITO/i)?.[1] || "";
@@ -59,14 +63,14 @@ async function parseLabPdf(buffer: Buffer) {
   const basofilos = leuco && basoPercent ? Math.round((parseFloat(basoPercent) / 100) * leuco).toString() : "";
 
   // ELECTROLITOS
-  const sodio = text.match(/SODIO\s*([\d.,]+)/i)?.[1] || "";
-  const potasio = text.match(/POTASIO\s*([\d.,]+)/i)?.[1] || "";
-  const cloro = text.match(/CLORO\s*([\d.,]+)/i)?.[1] || "";
+  const sodio = text.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*SODIO/i)?.[1] || "";
+  const potasio = text.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*POTASIO/i)?.[1] || "";
+  const cloro = text.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*CLORO/i)?.[1] || "";
 
   // BIOQUÍMICA
   const crea = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*CREATININA/i)?.[1] || "";
-  const bun = text.match(/BUN\s*([\d.,]+)/i)?.[1] || "";
-  const fosforo = text.match(/FÓSFORO\s*([\d.,]+)/i)?.[1] || "";
+  const bun = text.match(/([\d.,]+)\[[^\]]+\]mg\/dL\s*BUN/i)?.[1] || "";
+  const fosforo = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*FÓSFORO/i)?.[1] || "";
   const magnesio = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*MAGNESIO/i)?.[1] || "";
   const pcr = text.match(/PROTEÍNA C REACTIVA\s*([\d.,]+)/i)?.[1] || "";
   const glicada = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*%?\s*HEMOGLOBINA GLICOSILADA/i)?.[1] || "";
@@ -74,7 +78,6 @@ async function parseLabPdf(buffer: Buffer) {
   const albumina = text.match(/([\d.,]+)\s*\[.*?\]\s*g\/dL\s*ALBÚMINA/i)?.[1] || "";
   const plaqMatch = text.match(/([\d.]+)\s*miles\/uL\s*RCTO DE PLAQUETAS/i)?.[1] || "";
   const plaq = plaqMatch ? (parseFloat(plaqMatch) * 1000).toString() : "";
-
 
   // GASES ARTERIALES
   const ph = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*PH/i)?.[1] || "";
@@ -118,7 +121,7 @@ export const POST = async (req: Request) => {
       files.map(async (file, idx) => {
         const buffer = Buffer.from(await file.arrayBuffer());
         const parsed = await parseLabPdf(buffer);
-        console.log(`Parsed File ${idx + 1}:`, parsed);
+        //console.log(`Parsed File ${idx + 1}:`, parsed);
         const pdfIndex = idx + 1;
 
         // Add suffix (_1, _2, etc.) to keys
