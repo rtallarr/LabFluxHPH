@@ -5,13 +5,13 @@ import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import pdf from "pdf-parse";
 
-function exportData(data: any) {
+function exportData(data: string) {
   const exportPath = path.join(process.cwd(), "assets", "exported_data.json");
-  fs.writeFileSync(exportPath, JSON.stringify(data, null, 2));
+  fs.writeFileSync(exportPath, data);
   console.log(`Data exported to ${exportPath}`);
 }
 
-function pdfExportData(data: any, nombre: string, fecha: string, hora: string) {
+function pdfExportData(data: string, nombre: string, fecha: string, hora: string) {
   const filename = nombre.split(" ")[0] + fecha.replace(/\//g, "-") + "_" + hora.replace(/:/g, "_");
   const exportDir = path.join(process.cwd(), "assets", "pdf_data");
 
@@ -178,7 +178,7 @@ export const POST = async (req: Request) => {
     // Merge all placeholders into a single object
     const mergedPlaceholders = Object.assign({}, ...placeholdersArray);
     if (process.env.NODE_ENV === "development") {
-      exportData(placeholdersArray);
+      exportData(JSON.stringify(placeholdersArray, null, 2));
     }
     //console.log("Merged Placeholders:", mergedPlaceholders, "Placeholders Array:", placeholdersArray);
 
