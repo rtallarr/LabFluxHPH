@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { FaGithub } from "react-icons/fa";
 import Image from "next/image";
 
 export default function HomePage() {
@@ -70,12 +71,20 @@ export default function HomePage() {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header */}
       <header className="bg-blue-900 text-white py-4 flex items-center justify-center gap-6">
         <Image src="/gatosaludando.gif" alt="" width={64} height={64} unoptimized />
         <h1 className="text-4xl font-bold">LabFluxHPH</h1>
         <Image src="/gatosaludando.gif" alt="" width={64} height={64} unoptimized />
+        <a
+          href="https://github.com/rtallarr/LabFluxHPH"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute right-7 top-6 text-white text-2xl hover:text-gray-300"
+        >
+          <FaGithub size={30} />
+        </a>
       </header>
 
       {/* Main Card */}
@@ -181,6 +190,12 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      <footer className="bg-gray-200 text-gray-700 py-4 mt-8 text-center mt-auto">
+        <p>Comentarios, sugerencias y problemas dejarlos en <a href="https://github.com/rtallarr/LabFluxHPH/issues" className="underline hover:text-purple-600">github</a></p>
+        <p>&copy; {new Date().getFullYear()} <a href="https://www.tallar.cl" className="hover:text-purple-600">Rodrigo Tallar</a> y Cristóbal Fuentes</p>
+      </footer>
+
     </div>
   );
 }
