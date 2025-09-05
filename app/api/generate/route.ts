@@ -8,13 +8,28 @@ import pdf from "pdf-parse";
 async function parseLabPdf(buffer: Buffer) {
   const data = await pdf(buffer);
   const text = data.text;
-  console.log("PDF Text:", text);
+  //console.log("PDF Text:", text);
+
+  // PACIENTE
+  const paciente = text.match(/PACIENTE\s*:\s*(.+)/i)?.[1]?.trim() || "";
+  const identificacion = text.match(/IDENTIFICACION\s*:\s*(.+)/i)?.[1]?.trim() || "";
+  const fechaNac = text.match(/FECHA NAC\.?\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4})/)?.[1]?.replace(/-/g, "/") || "";
+  const sexo = text.match(/SEXO\s*:\s*(FEMENINO|MASCULINO)/i)?.[1]?.trim() || "";
+  const nroOrden = text.match(/N° ORDEN\s*:\s*(\d+)/i)?.[1]?.trim() || "";
+  const edad = text.match(/EDAD\s*:\s*([\d]+)\s*años/i)?.[1] || "";
+  const ingreso = text.match(/INGRESO\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4}\s+[\d]{2}:[\d]{2})/)?.[1]?.replace(/-/g, "/") || "";
+  const tDeMuestra = text.match(/T\. DE MUESTRA\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4}\s+[\d]{2}:[\d]{2})/)?.[1]?.replace(/-/g, "/") || "";
+  const recepcion = text.match(/RECEPCIÓN\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4}\s+[\d]{2}:[\d]{2})/)?.[1]?.replace(/-/g, "/") || "";
+  const procedencia = text.match(/PROCEDENCIA\s*:\s*(.+)/i)?.[1]?.trim() || "";
+  const area = text.match(/ÁREA\s*:\s*(.+)/i)?.[1]?.trim() || "";
+  const subprocedencia = text.match(/SUBPROCEDENCIA\s*:\s*(.+)/i)?.[1]?.trim() || "";
+  const ficha = text.match(/FICHA\s*:\s*(\d+)/i)?.[1]?.trim() || "";
 
   // Extract dates/times
-  const fechaRaw = text.match(/(\d{2}[\/-]\d{2}[\/-]\d{4})\s+\d{2}:\d{2}/)?.[1] || "";
-  const fecha = fechaRaw.replace(/-/g, "/");  // convert 04-09-2025 → 04/09/2025
+  const recepcionMatch = text.match(/RECEPCIÓN:\s*\n(?:.*\n){2}(\d{2}\/\d{2}\/\d{4}) (\d{2}:\d{2})/);
+  const fecha = recepcionMatch?.[1].replace(/-/g, "/");  // convert 04-09-2025 → 04/09/2025
 
-  const hora = text.match(/\d{2}[\/-]\d{2}[\/-]\d{4}\s+(\d{2}:\d{2})/)?.[1] || "";
+  const hora  = recepcionMatch?.[2] || "";
 
   // PERFIL HEMATOLÓGICO
   const hto = text.match(/([\d.,]+)\s*%?\s*HEMATOCRITO/i)?.[1] || "";
@@ -49,13 +64,17 @@ async function parseLabPdf(buffer: Buffer) {
   const cloro = text.match(/CLORO\s*([\d.,]+)/i)?.[1] || "";
 
   // BIOQUÍMICA
-  const creatinina = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*CREATININA/i)?.[1] || "";
+  const crea = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*CREATININA/i)?.[1] || "";
   const bun = text.match(/BUN\s*([\d.,]+)/i)?.[1] || "";
   const fosforo = text.match(/FÓSFORO\s*([\d.,]+)/i)?.[1] || "";
-  const magnesio = text.match(/MAGNESIO\s*([\d.,]+)/i)?.[1] || "";
+  const magnesio = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*MAGNESIO/i)?.[1] || "";
   const pcr = text.match(/PROTEÍNA C REACTIVA\s*([\d.,]+)/i)?.[1] || "";
   const glicada = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*%?\s*HEMOGLOBINA GLICOSILADA/i)?.[1] || "";
-  const buncrea = bun && creatinina ? Math.round(parseFloat(bun) / parseFloat(creatinina)) : "";
+  const buncrea = bun && crea ? Math.round(parseFloat(bun) / parseFloat(crea)) : "";
+  const albumina = text.match(/([\d.,]+)\s*\[.*?\]\s*g\/dL\s*ALBÚMINA/i)?.[1] || "";
+  const plaqMatch = text.match(/([\d.]+)\s*miles\/uL\s*RCTO DE PLAQUETAS/i)?.[1] || "";
+  const plaq = plaqMatch ? (parseFloat(plaqMatch) * 1000).toString() : "";
+
 
   // GASES ARTERIALES
   const ph = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*PH/i)?.[1] || "";
@@ -70,7 +89,7 @@ async function parseLabPdf(buffer: Buffer) {
     fecha, hora, 
     hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
     sodio, potasio, cloro, 
-    creatinina, bun, fosforo, magnesio, pcr, glicada, buncrea,
+    crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq,
     ph, pcodos, podos, bicarb, tco2, base, satO2
   };
 }
