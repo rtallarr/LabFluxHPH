@@ -11,28 +11,57 @@ async function parseLabPdf(buffer: Buffer) {
   //console.log("PDF Text:", text);
 
   // Extract dates/times
-  const recepcionMatch = text.match(/RECEPCIÓN:\s*\n(?:.*\n){2}(\d{2}\/\d{2}\/\d{4}) (\d{2}:\d{2})/);
-  const fecha = recepcionMatch?.[1] || "";
-  const hora  = recepcionMatch?.[2] || "";
+  const fechaRaw = text.match(/(\d{2}[\/-]\d{2}[\/-]\d{4})\s+\d{2}:\d{2}/)?.[1] || "";
+  const fecha = fechaRaw.replace(/-/g, "/");  // convert 04-09-2025 → 04/09/2025
 
-  // Extract lab values (tolerating optional * and spaces)
+  const hora = text.match(/\d{2}[\/-]\d{2}[\/-]\d{4}\s+(\d{2}:\d{2})/)?.[1] || "";
+
+  // PERFIL HEMATOLÓGICO
   const hto = text.match(/([\d.,]+)\s*%?\s*HEMATOCRITO/i)?.[1] || "";
   const hb = text.match(/([\d.,]+)\s*g\/dL\s*HEMOGLOBINA/i)?.[1] || "";
   const eritro = text.match(/([\d.,]+)\s*mill[oó]n\/uL\s*RCTO DE ERITROCITOS/i)?.[1] || "";
   const vcm = text.match(/([\d.,]+)\s*fL\s*VCM/i)?.[1] || "";
   const hcm = text.match(/([\d.,]+)\s*pg\s*HCM/i)?.[1] || "";
+  const chcm = text.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
   const leuco = text.match(/([\d.,]+)\s*(miles\/uL|millón\/uL)?\s*R?CTO DE LEUCOCITOS/i)?.[1] || "";
-  const neutro = text.match(/([\d.,]+)%\s*NEUTR[ÓO]FILOS/i)?.[1] || "";
-  const linfo = text.match(/([\d.,]+)%\s*LINFOCITOS/i)?.[1] || "";
+  const neu = text.match(/([\d.,]+)%\s*NEUTR[ÓO]FILOS/i)?.[1] || "";
+  const linfocitos = text.match(/([\d.,]+)%\s*LINFOCITOS/i)?.[1] || "";
   const mono = text.match(/([\d.,]+)%\s*MONOCITOS/i)?.[1] || "";
-  const eosi = text.match(/([\d.,]+)%\s*EOSIN[ÓO]FILOS/i)?.[1] || "";
-  const baso = text.match(/([\d.,]+)%\s*BAS[ÓO]FILOS/i)?.[1] || "";
+  const eosin = text.match(/([\d.,]+)%\s*EOSIN[ÓO]FILOS/i)?.[1] || "";
+  const basofilos = text.match(/([\d.,]+)%\s*BAS[ÓO]FILOS/i)?.[1] || "";
   const rcaNeutro = text.match(/([\d.,]+)\s*miles\/uL\s*RCTO ABSOLUTO NEUTR[ÓO]FILOS/i)?.[1] || "";
   const rcaLinfo = text.match(/([\d.,]+)\s*miles\/uL\s*RCTO ABSOLUTO LINFOCITOS/i)?.[1] || "";
   const rcaMono = text.match(/([\d.,]+)\s*miles\/uL\s*RCTO ABSOLUTO MONOCITOS/i)?.[1] || "";
 
+  // ELECTROLITOS
+  const sodio = text.match(/SODIO\s*([\d.,]+)/i)?.[1] || "";
+  const potasio = text.match(/POTASIO\s*([\d.,]+)/i)?.[1] || "";
+  const cloro = text.match(/CLORO\s*([\d.,]+)/i)?.[1] || "";
 
-  return { fecha, hora, hto, hb, vcm, leuco, eritro, hcm, neutro, linfo, mono, eosi, baso, rcaNeutro, rcaLinfo, rcaMono };
+  // BIOQUÍMICA
+  const creatinina = text.match(/CREATININA\s*([\d.,]+)/i)?.[1] || "";
+  const bun = text.match(/BUN\s*([\d.,]+)/i)?.[1] || "";
+  const fosforo = text.match(/FÓSFORO\s*([\d.,]+)/i)?.[1] || "";
+  const magnesio = text.match(/MAGNESIO\s*([\d.,]+)/i)?.[1] || "";
+  const pcr = text.match(/PROTEÍNA C REACTIVA\s*([\d.,]+)/i)?.[1] || "";
+  const glicada = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*%?\s*HEMOGLOBINA GLICOSILADA/i)?.[1] || "";
+
+  // GASES ARTERIALES
+  const ph = text.match(/PH\s*([\d.,]+)\s*\[.*?\]/i)?.[1] || "";
+  const pco2 = text.match(/P CO2\s*([\d.,]+)/i)?.[1] || "";
+  const po2 = text.match(/P O2\s*([\d.,]+)/i)?.[1] || "";
+  const hco3 = text.match(/HCO3\s*([\d.,]+)/i)?.[1] || "";
+  const ebvt = text.match(/EBVT\s*([\d.,]+)/i)?.[1] || ""; //esta como BE en el flujograma
+  const satO2 = text.match(/SATURACION DE O2\s*([\d.,]+)/i)?.[1] || "";
+
+
+  return { 
+    fecha, hora, 
+    hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos, rcaNeutro, rcaLinfo, rcaMono, 
+    sodio, potasio, cloro, 
+    creatinina, bun, fosforo, magnesio, pcr, glicada, 
+    ph, pco2, po2, hco3, ebvt, satO2 
+  };
 }
 
 export const POST = async (req: Request) => {
@@ -85,11 +114,9 @@ export const POST = async (req: Request) => {
         "Content-Disposition": `attachment; filename=LabFluxHPH.docx`,
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err);
-    return NextResponse.json(
-      { error: err.message || "Unknown error" },
-      { status: 500 }
-    );
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 };

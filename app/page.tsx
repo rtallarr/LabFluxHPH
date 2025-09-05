@@ -60,7 +60,7 @@ export default function HomePage() {
       URL.revokeObjectURL(url);
 
       setStatus("✅ Flujograma generado. Revisa tu descarga.");
-    } catch (err) {
+    } catch {
       setStatus("❌ Error al generar el flujograma.");
     } finally {
       setLoading(false);
