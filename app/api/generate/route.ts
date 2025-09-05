@@ -49,12 +49,13 @@ async function parseLabPdf(buffer: Buffer) {
   const cloro = text.match(/CLORO\s*([\d.,]+)/i)?.[1] || "";
 
   // BIOQUÍMICA
-  const creatinina = text.match(/CREATININA\s*([\d.,]+)/i)?.[1] || "";
+  const creatinina = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*CREATININA/i)?.[1] || "";
   const bun = text.match(/BUN\s*([\d.,]+)/i)?.[1] || "";
   const fosforo = text.match(/FÓSFORO\s*([\d.,]+)/i)?.[1] || "";
   const magnesio = text.match(/MAGNESIO\s*([\d.,]+)/i)?.[1] || "";
   const pcr = text.match(/PROTEÍNA C REACTIVA\s*([\d.,]+)/i)?.[1] || "";
   const glicada = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*%?\s*HEMOGLOBINA GLICOSILADA/i)?.[1] || "";
+  const buncrea = bun && creatinina ? Math.round(parseFloat(bun) / parseFloat(creatinina)) : "";
 
   // GASES ARTERIALES
   const ph = text.match(/PH\s*([\d.,]+)\s*\[.*?\]/i)?.[1] || "";
@@ -69,7 +70,7 @@ async function parseLabPdf(buffer: Buffer) {
     fecha, hora, 
     hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
     sodio, potasio, cloro, 
-    creatinina, bun, fosforo, magnesio, pcr, glicada, 
+    creatinina, bun, fosforo, magnesio, pcr, glicada, buncrea,
     ph, pco2, po2, hco3, ebvt, satO2 
   };
 }
