@@ -8,7 +8,7 @@ import pdf from "pdf-parse";
 async function parseLabPdf(buffer: Buffer) {
   const data = await pdf(buffer);
   const text = data.text;
-  //console.log("PDF Text:", text);
+  console.log("PDF Text:", text);
 
   // Extract dates/times
   const fechaRaw = text.match(/(\d{2}[\/-]\d{2}[\/-]\d{4})\s+\d{2}:\d{2}/)?.[1] || "";
@@ -58,20 +58,20 @@ async function parseLabPdf(buffer: Buffer) {
   const buncrea = bun && creatinina ? Math.round(parseFloat(bun) / parseFloat(creatinina)) : "";
 
   // GASES ARTERIALES
-  const ph = text.match(/PH\s*([\d.,]+)\s*\[.*?\]/i)?.[1] || "";
-  const pco2 = text.match(/P CO2\s*([\d.,]+)/i)?.[1] || "";
-  const po2 = text.match(/P O2\s*([\d.,]+)/i)?.[1] || "";
-  const hco3 = text.match(/HCO3\s*([\d.,]+)/i)?.[1] || "";
-  const ebvt = text.match(/EBVT\s*([\d.,]+)/i)?.[1] || ""; //esta como BE en el flujograma
-  const satO2 = text.match(/SATURACION DE O2\s*([\d.,]+)/i)?.[1] || "";
-
+  const ph = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*PH/i)?.[1] || "";
+  const pcodos = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*P\s*CO2/i)?.[1] || "";
+  const podos = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*P\s*O2/i)?.[1] || "";
+  const bicarb = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*HCO3/i)?.[1] || "";
+  const tco2 = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*T\s*CO2/i)?.[1] || "";
+  const base = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*EBVT/i)?.[1] || ""; //esta como BE en el flujograma
+  const satO2 = text.match(/([\d.,]+)\s*\[[^\]]*\]%?\s*SATURACION\s*DE\s*O2/i)?.[1] || "";
 
   return { 
     fecha, hora, 
     hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
     sodio, potasio, cloro, 
     creatinina, bun, fosforo, magnesio, pcr, glicada, buncrea,
-    ph, pco2, po2, hco3, ebvt, satO2 
+    ph, pcodos, podos, bicarb, tco2, base, satO2
   };
 }
 
