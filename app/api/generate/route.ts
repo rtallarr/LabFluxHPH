@@ -5,10 +5,26 @@ import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import pdf from "pdf-parse";
 
+function exportData(data: any) {
+  const exportPath = path.join(process.cwd(), "assets", "exported_data.json");
+  fs.writeFileSync(exportPath, JSON.stringify(data, null, 2));
+  console.log(`Data exported to ${exportPath}`);
+}
+
+function pdfExportData(data: any, nombre: string, fecha: string, hora: string) {
+  const filename = nombre.split(" ")[0] + fecha.replace(/\//g, "-") + "_" + hora.replace(/:/g, "_");
+  const exportDir = path.join(process.cwd(), "assets", "pdf_data");
+
+  if (!fs.existsSync(exportDir)) fs.mkdirSync(exportDir, { recursive: true });
+
+  const exportPath = path.join(process.cwd(), "assets", "pdf_data", filename+".txt");
+  fs.writeFileSync(exportPath, data);
+  console.log(`Data exported to ${exportPath}`);
+}
+
 async function parseLabPdf(buffer: Buffer) {
   const data = await pdf(buffer);
   const text = data.text;
-  //console.log("PDF Text:", text);
 
   // PACIENTE
   const nombre = text.match(/PACIENTE\s*:\s*(.+)/i)?.[1]?.trim() || "";
@@ -25,14 +41,14 @@ async function parseLabPdf(buffer: Buffer) {
   const subprocedencia = text.match(/([A-ZÁÉÍÓÚÑ0-9\s°]+)SUBPROCEDENCIA:/i)?.[1]?.trim() || "";
   const ficha = text.match(/FICHA\s*:\s*(\d+)/i)?.[1]?.trim() || "";
 
-  //console.log("Paciente:", nombre, "identificaion:", rut, "fechaNac:", fechaNac, "sexo:", sexo, "nroOrden:", nroOrden,"edad:", edad,"ingreso:", ingreso,"tDeMuestra:", tDeMuestra,"recepcion:", recepcion,"procedencia:", procedencia,"area:", area,"subprocedencia:", subprocedencia,"ficha:", ficha);
-
   // Extract dates/times
   const recepcionMatch = text.match(/RECEPCIÓN:[\s\S]*\n\d{2}[\/-]\d{2}[\/-]\d{4}\s\d{2}:\d{2}\n(\d{2}[\/-]\d{2}[\/-]\d{4})\s(\d{2}:\d{2})/);
   const fecha = recepcionMatch?.[1].replace(/-/g, "/") || "";
   const hora = recepcionMatch?.[2] || "";
 
-  //console.log("Fecha:", fecha, "Hora:", hora);
+  if (process.env.NODE_ENV === "development") {
+     pdfExportData(text, nombre, fecha, hora);
+  }
 
   // PERFIL HEMATOLÓGICO
   const hto = text.match(/([\d.,]+)\s*%?\s*HEMATOCRITO/i)?.[1] || "";
@@ -113,7 +129,6 @@ async function parseLabPdf(buffer: Buffer) {
   const cristaloc = text.match(/CRISTALES\s*(.*)/i)?.[1] || "";
   const levadoc = text.match(/LEVADURAS\s*(.*)/i)?.[1] || "";
 
-
   //console.log("color:" + coloroc + " aspecto:" + aspectooc + " densidad:" + densoc + " ph:" + phoc, "leucos:" + leucosoc, "Eritrocitos:" + groc, " nitritos:" + nitritosoc + " proteinas:" + protoc + " cetonas:" + cetonasoc + " glucosa:" + glucosaoc + " urobilinogeno:" + urobiloc + " bilirrubina:" + bilioc + " globulos rojos:" + globRojos);
 
   return {
@@ -162,6 +177,9 @@ export const POST = async (req: Request) => {
 
     // Merge all placeholders into a single object
     const mergedPlaceholders = Object.assign({}, ...placeholdersArray);
+    if (process.env.NODE_ENV === "development") {
+      exportData(placeholdersArray);
+    }
     //console.log("Merged Placeholders:", mergedPlaceholders, "Placeholders Array:", placeholdersArray);
 
     // Render template with extracted data
