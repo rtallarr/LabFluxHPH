@@ -5,6 +5,12 @@ import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import pdf from "pdf-parse";
 
+function parseFechaHora(fecha: string, hora: string): Date {
+  const [day, month, year] = fecha.split("/").map(Number);
+  const [hours, minutes] = hora.split(":").map(Number);
+  return new Date(year, month - 1, day, hours, minutes);
+}
+
 function exportData(data: string) {
   const exportPath = path.join(process.cwd(), "assets", "exported_data.json");
   fs.writeFileSync(exportPath, data);
@@ -174,6 +180,13 @@ export const POST = async (req: Request) => {
         );
       })
     );
+
+    // Sort by fecha - hora
+    placeholdersArray.sort((a, b) => {
+      const dateA = parseFechaHora(String(a.fecha ?? ""), String(a.hora ?? ""));
+      const dateB = parseFechaHora(String(b.fecha ?? ""), String(b.hora ?? ""));
+      return dateA.getTime() - dateB.getTime(); // ascending
+    });
 
     // Merge all placeholders into a single object
     const mergedPlaceholders = Object.assign({}, ...placeholdersArray);
