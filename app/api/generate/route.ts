@@ -23,15 +23,25 @@ async function parseLabPdf(buffer: Buffer) {
   const vcm = text.match(/([\d.,]+)\s*fL\s*VCM/i)?.[1] || "";
   const hcm = text.match(/([\d.,]+)\s*pg\s*HCM/i)?.[1] || "";
   const chcm = text.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
-  const leuco = text.match(/([\d.,]+)\s*(miles\/uL|millón\/uL)?\s*R?CTO DE LEUCOCITOS/i)?.[1] || "";
-  const neu = text.match(/([\d.,]+)%\s*NEUTR[ÓO]FILOS/i)?.[1] || "";
-  const linfocitos = text.match(/([\d.,]+)%\s*LINFOCITOS/i)?.[1] || "";
-  const mono = text.match(/([\d.,]+)%\s*MONOCITOS/i)?.[1] || "";
-  const eosin = text.match(/([\d.,]+)%\s*EOSIN[ÓO]FILOS/i)?.[1] || "";
-  const basofilos = text.match(/([\d.,]+)%\s*BAS[ÓO]FILOS/i)?.[1] || "";
   const rcaNeutro = text.match(/([\d.,]+)\s*miles\/uL\s*RCTO ABSOLUTO NEUTR[ÓO]FILOS/i)?.[1] || "";
   const rcaLinfo = text.match(/([\d.,]+)\s*miles\/uL\s*RCTO ABSOLUTO LINFOCITOS/i)?.[1] || "";
   const rcaMono = text.match(/([\d.,]+)\s*miles\/uL\s*RCTO ABSOLUTO MONOCITOS/i)?.[1] || "";
+
+  // CELULAS (?)
+  const leucoMatch = text.match(/([\d.]+)\s*(miles\/uL|millón\/uL)?\s*R?CTO DE LEUCOCITOS/i);
+  const leuco = leucoMatch ? parseFloat(leucoMatch[1]) * 1000 : null; // null if missing
+
+  const neuPercent = text.match(/([\d.,]+)%\s*NEUTR[ÓO]FILOS/i)?.[1];
+  const linfPercent = text.match(/([\d.,]+)%\s*LINFOCITOS/i)?.[1];
+  const monoPercent = text.match(/([\d.,]+)%\s*MONOCITOS/i)?.[1];
+  const eosinPercent = text.match(/([\d.,]+)%\s*EOSIN[ÓO]FILOS/i)?.[1];
+  const basoPercent = text.match(/([\d.,]+)%\s*BAS[ÓO]FILOS/i)?.[1];
+
+  const neu = leuco && neuPercent ? Math.round((parseFloat(neuPercent) / 100) * leuco).toString() : "";
+  const linfocitos = leuco && linfPercent ? Math.round((parseFloat(linfPercent) / 100) * leuco).toString() : "";
+  const mono = leuco && monoPercent ? Math.round((parseFloat(monoPercent) / 100) * leuco).toString() : "";
+  const eosin = leuco && eosinPercent ? Math.round((parseFloat(eosinPercent) / 100) * leuco).toString() : "";
+  const basofilos = leuco && basoPercent ? Math.round((parseFloat(basoPercent) / 100) * leuco).toString() : "";
 
   // ELECTROLITOS
   const sodio = text.match(/SODIO\s*([\d.,]+)/i)?.[1] || "";
@@ -57,7 +67,7 @@ async function parseLabPdf(buffer: Buffer) {
 
   return { 
     fecha, hora, 
-    hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos, rcaNeutro, rcaLinfo, rcaMono, 
+    hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
     sodio, potasio, cloro, 
     creatinina, bun, fosforo, magnesio, pcr, glicada, 
     ph, pco2, po2, hco3, ebvt, satO2 
