@@ -18,8 +18,8 @@ export default function HomePage() {
       (f) => /\.pdf$/i.test(f.name) || /\.zip$/i.test(f.name)
     );
 
-    if (files.length + valid.length > 8) {
-      setStatus("⚠ No puedes subir más de 8 archivos.");
+    if (files.length + valid.length > 24) {
+      setStatus("⚠ El numero máximo de archivos a subir es 24.");
       return;
     }
 
