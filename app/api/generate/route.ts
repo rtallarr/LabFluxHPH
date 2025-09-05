@@ -32,8 +32,7 @@ async function parseLabPdf(buffer: Buffer) {
   const fecha = recepcionMatch?.[1].replace(/-/g, "/") || "";
   const hora = recepcionMatch?.[2] || "";
 
-
-  console.log("Fecha:", fecha, "Hora:", hora);
+  //console.log("Fecha:", fecha, "Hora:", hora);
 
   // PERFIL HEMATOLÓGICO
   const hto = text.match(/([\d.,]+)\s*%?\s*HEMATOCRITO/i)?.[1] || "";
@@ -68,11 +67,15 @@ async function parseLabPdf(buffer: Buffer) {
   const cloro = text.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*CLORO/i)?.[1] || "";
 
   // BIOQUÍMICA
+  const coltotal = text.match(/([\d.,]+)\s*\[Ideal/i)?.[1] || "";
+  const hdl = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*COLESTEROL HDL/i)?.[1] || "";
+  const tgl = text.match(/([\d.,]+)\s*\[.*?\]mg\/dLTRIGLICÉRIDOS/i)?.[1] || "";
+  const ldl = coltotal && hdl && tgl && parseFloat(tgl) < 400 ? Math.round(parseFloat(coltotal) - parseFloat(hdl) - parseFloat(tgl)/5).toString() : "";
   const crea = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*CREATININA/i)?.[1] || "";
   const bun = text.match(/([\d.,]+)\[[^\]]+\]mg\/dL\s*BUN/i)?.[1] || "";
   const fosforo = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*FÓSFORO/i)?.[1] || "";
   const magnesio = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*MAGNESIO/i)?.[1] || "";
-  const pcr = text.match(/PROTEÍNA C REACTIVA\s*([\d.,]+)/i)?.[1] || "";
+  const pcr = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/L\s*PROTEÍNA C REACTIVA/i)?.[1] || "";
   const glicada = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*%?\s*HEMOGLOBINA GLICOSILADA/i)?.[1] || "";
   const buncrea = bun && crea ? Math.round(parseFloat(bun) / parseFloat(crea)) : "";
   const albumina = text.match(/([\d.,]+)\s*\[.*?\]\s*g\/dL\s*ALBÚMINA/i)?.[1] || "";
@@ -92,7 +95,7 @@ async function parseLabPdf(buffer: Buffer) {
     fecha, hora, 
     hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
     sodio, potasio, cloro, 
-    crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq,
+    coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq,
     ph, pcodos, podos, bicarb, tco2, base, satO2
   };
 }
@@ -121,7 +124,7 @@ export const POST = async (req: Request) => {
       files.map(async (file, idx) => {
         const buffer = Buffer.from(await file.arrayBuffer());
         const parsed = await parseLabPdf(buffer);
-        //console.log(`Parsed File ${idx + 1}:`, parsed);
+        console.log(`Parsed File ${idx + 1}:`, parsed);
         const pdfIndex = idx + 1;
 
         // Add suffix (_1, _2, etc.) to keys
