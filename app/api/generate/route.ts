@@ -11,8 +11,8 @@ async function parseLabPdf(buffer: Buffer) {
   //console.log("PDF Text:", text);
 
   // PACIENTE
-  const paciente = text.match(/PACIENTE\s*:\s*(.+)/i)?.[1]?.trim() || "";
-  const identificacion = text.match(/IDENTIFICACION\s*:\s*(.+)/i)?.[1]?.trim() || "";
+  const nombre = text.match(/PACIENTE\s*:\s*(.+)/i)?.[1]?.trim() || "";
+  const rut = text.match(/IDENTIFICACION\s*:\s*(.+)/i)?.[1]?.trim() || "";
   const fechaNac = text.match(/FECHA NAC\.?\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4})/)?.[1]?.replace(/-/g, "/") || "";
   const sexo = text.match(/\b(FEMENINO|MASCULINO)\b/i)?.[1] || "";
   const nroOrden = text.match(/N° ORDEN\s*:\s*(\d+)/i)?.[1]?.trim() || "";
@@ -25,7 +25,7 @@ async function parseLabPdf(buffer: Buffer) {
   const subprocedencia = text.match(/([A-ZÁÉÍÓÚÑ0-9\s°]+)SUBPROCEDENCIA:/i)?.[1]?.trim() || "";
   const ficha = text.match(/FICHA\s*:\s*(\d+)/i)?.[1]?.trim() || "";
 
-  //console.log("Paciente:", paciente, "identificaion:", identificacion, "fechaNac:", fechaNac, "sexo:", sexo, "nroOrden:", nroOrden,"edad:", edad,"ingreso:", ingreso,"tDeMuestra:", tDeMuestra,"recepcion:", recepcion,"procedencia:", procedencia,"area:", area,"subprocedencia:", subprocedencia,"ficha:", ficha);
+  //console.log("Paciente:", nombre, "identificaion:", rut, "fechaNac:", fechaNac, "sexo:", sexo, "nroOrden:", nroOrden,"edad:", edad,"ingreso:", ingreso,"tDeMuestra:", tDeMuestra,"recepcion:", recepcion,"procedencia:", procedencia,"area:", area,"subprocedencia:", subprocedencia,"ficha:", ficha);
 
   // Extract dates/times
   const recepcionMatch = text.match(/RECEPCIÓN:[\s\S]*\n\d{2}[\/-]\d{2}[\/-]\d{4}\s\d{2}:\d{2}\n(\d{2}[\/-]\d{2}[\/-]\d{4})\s(\d{2}:\d{2})/);
@@ -47,7 +47,7 @@ async function parseLabPdf(buffer: Buffer) {
 
   // CELULAS (?)
   const leucoMatch = text.match(/([\d.]+)\s*(miles\/uL|millón\/uL)?\s*R?CTO DE LEUCOCITOS/i);
-  const leuco = leucoMatch ? parseFloat(leucoMatch[1]) * 1000 : null; // null if missing
+  const leuco = leucoMatch ? parseFloat(leucoMatch[1]) * 1000 : null;
 
   const neuPercent = text.match(/([\d.,]+)%\s*NEUTR[ÓO]FILOS/i)?.[1];
   const linfPercent = text.match(/([\d.,]+)%\s*LINFOCITOS/i)?.[1];
@@ -91,12 +91,38 @@ async function parseLabPdf(buffer: Buffer) {
   const base = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*EBVT/i)?.[1] || ""; //esta como BE en el flujograma
   const satO2 = text.match(/([\d.,]+)\s*\[[^\]]*\]%?\s*SATURACION\s*DE\s*O2/i)?.[1] || "";
 
-  return { 
-    fecha, hora, 
+  // ORINA
+  const coloroc = text.match(/COLOR\s*([A-Za-z]+)/i)?.[1] || "";
+  const aspectooc = text.match(/ASPECTO([A-Za-z]+)Transparente/i)?.[1] || "";
+  const densoc = text.match(/(\d+\.\d+)\s*1\.005\s*-\s*1\.025/i)?.[1] || "";
+  const phoc = text.match(/pH([\d.,]+)5\.0 - 7\.0/i)?.[1] || "";
+  const nitritosoc = text.match(/NITRITOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
+  const protoc = text.match(/PROTEINAS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
+  const cetonasoc = text.match(/CUERPOS CETÓNICOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
+  const glucosaoc = text.match(/GLUCOSA\s*([A-Za-z0-9]+)Normal/i)?.[1] || "";
+  const urobiloc = text.match(/UROBILINÓGENO\s*([A-Za-z0-9]+)Normal/i)?.[1] || "";
+  const bilioc = text.match(/BILIRRUBINA\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
+  const mucusoc = text.match(/MUCUS\s*(.*)/i)?.[1] || "";
+  const globRojos = text.match(/GLOBULOS ROJOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
+  const leucosoc = text.match(/LEUCOCITOS\s*(.*)\s*0\s*-\s*4/i)?.[1] || "";
+  const groc = text.match(/ERITROCITOS\s*(.*)\s*0\s*-\s*4/i)?.[1] || "";
+  const bactoc = text.match(/BACTERIAS\s*(.*)No se/i)?.[1] || "";
+  const hialoc = text.match(/CILINDROS HIALINOS\s*(.*)/i)?.[1] || "";
+  const granuloc = text.match(/CILINDROS GRANULOSOS\s*(.*)/i)?.[1] || "";
+  const epiteloc = text.match(/CÉLULAS EPITELIALES\s*(.*)/i)?.[1] || "";
+  const cristaloc = text.match(/CRISTALES\s*(.*)/i)?.[1] || "";
+  const levadoc = text.match(/LEVADURAS\s*(.*)/i)?.[1] || "";
+
+
+  //console.log("color:" + coloroc + " aspecto:" + aspectooc + " densidad:" + densoc + " ph:" + phoc, "leucos:" + leucosoc, "Eritrocitos:" + groc, " nitritos:" + nitritosoc + " proteinas:" + protoc + " cetonas:" + cetonasoc + " glucosa:" + glucosaoc + " urobilinogeno:" + urobiloc + " bilirrubina:" + bilioc + " globulos rojos:" + globRojos);
+
+  return {
+    nombre, rut, fecha, hora, 
     hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
     sodio, potasio, cloro, 
     coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq,
-    ph, pcodos, podos, bicarb, tco2, base, satO2
+    ph, pcodos, podos, bicarb, base, satO2,
+    coloroc, aspectooc, densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc, mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
   };
 }
 
@@ -124,7 +150,7 @@ export const POST = async (req: Request) => {
       files.map(async (file, idx) => {
         const buffer = Buffer.from(await file.arrayBuffer());
         const parsed = await parseLabPdf(buffer);
-        console.log(`Parsed File ${idx + 1}:`, parsed);
+        //console.log(`Parsed File ${idx + 1}:`, parsed);
         const pdfIndex = idx + 1;
 
         // Add suffix (_1, _2, etc.) to keys
