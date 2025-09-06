@@ -11,10 +11,10 @@ function parseFechaHora(fecha: string, hora: string): Date {
   return new Date(year, month - 1, day, hours, minutes);
 }
 
-function exportData(data: string) {
-  const exportPath = path.join(process.cwd(), "assets", "exported_data.json");
+function exportData(data: string, name: string) {
+  const exportPath = path.join(process.cwd(), "assets", name+".json");
   fs.writeFileSync(exportPath, data);
-  console.log(`Data exported to ${exportPath}`);
+  //console.log(`Data exported to ${exportPath}`);
 }
 
 function pdfExportData(data: string, nombre: string, fecha: string, hora: string) {
@@ -27,6 +27,25 @@ function pdfExportData(data: string, nombre: string, fecha: string, hora: string
   fs.writeFileSync(exportPath, data);
   console.log(`Data exported to ${exportPath}`);
 }
+
+function splitExams(text: string): { type: string; content: string }[] {
+  const examRegex = /(ORINA COMPLETA.*|PERFIL HEMATOL[ÓO]GICO.*|BIOQU[IÍ]MICA.*|HEMOSTASIA.*|QU[ÍI]MICA)/gi;
+  const matches = [...text.matchAll(examRegex)];
+
+  const exams: { type: string; content: string }[] = [];
+
+  matches.forEach((m, i) => {
+    const start = m.index ?? 0;
+    const end = matches[i + 1]?.index ?? text.length;
+    exams.push({
+      type: m[0].toUpperCase(),
+      content: text.slice(start, end).trim(),
+    });
+  });
+
+  return exams;
+}
+
 
 async function parseLabPdf(buffer: Buffer) {
   const data = await pdf(buffer);
@@ -191,7 +210,7 @@ export const POST = async (req: Request) => {
     // Merge all placeholders into a single object
     const mergedPlaceholders = Object.assign({}, ...placeholdersArray);
     if (process.env.NODE_ENV === "development") {
-      exportData(JSON.stringify(placeholdersArray, null, 2));
+      exportData(JSON.stringify(placeholdersArray, null, 2), "exported_data");
     }
     //console.log("Merged Placeholders:", mergedPlaceholders, "Placeholders Array:", placeholdersArray);
 
