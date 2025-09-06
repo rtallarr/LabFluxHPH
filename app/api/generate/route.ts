@@ -209,7 +209,7 @@ export const POST = async (req: Request) => {
     });
 
     // Flatten all parsed exams from all files
-    let parsedExams = (await Promise.all(
+    const parsedExams = (await Promise.all(
       files.map(async (file) => {
         const buffer = Buffer.from(await file.arrayBuffer());
         return parseLabPdf(buffer);
@@ -240,7 +240,6 @@ export const POST = async (req: Request) => {
     // Assign independent counters
     let orinaCounter = 0;
     let normalCounter = 0;
-    let cultivosCounter = 0;
 
     const placeholdersArray = [
       ...orinaExams.map((exam) => {
