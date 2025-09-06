@@ -34,15 +34,23 @@ function splitExams(text: string): { type: string; content: string }[] {
 
   const exams: { type: string; content: string }[] = [];
 
-  matches.forEach((m, i) => {
-    const start = m.index ?? 0;
-    const end = matches[i + 1]?.index ?? text.length;
-    exams.push({
-      type: m[0].toUpperCase(),
-      content: text.slice(start, end).trim(),
-    });
-  });
+  for (let i = 0; i < matches.length; i++) {
+    const startIndex = matches[i].index!;
+    const endIndex = matches[i + 1]?.index ?? text.length;
+    const type = matches[i][0].trim();
+    const content = text.slice(startIndex, endIndex);
 
+    if (type.includes("ORINA COMPLETA") || type.includes("CULTIVOS")) {
+      exams.push({ type, content });
+    } else {
+      const existing = exams.find((s) => s.type === "EXÁMENES GENERALES");
+      if (existing) {
+        existing.content += "\n" + content;
+      } else {
+        exams.push({ type: "EXÁMENES GENERALES", content });
+      }
+    }
+  }
   return exams;
 }
 
