@@ -11,8 +11,12 @@ function parseFechaHora(fecha: string, hora: string): Date {
   return new Date(year, month - 1, day, hours, minutes);
 }
 
-function exportData(data: string, name: string) {
-  const exportPath = path.join(process.cwd(), "assets", name+".json");
+function exportData(data: string, filename: string) {
+  const exportDir = path.join(process.cwd(), "assets", "parsed_data");
+
+  if (!fs.existsSync(exportDir)) fs.mkdirSync(exportDir, { recursive: true });
+
+  const exportPath = path.join(process.cwd(), "assets", "parsed_data", filename+".json");
   fs.writeFileSync(exportPath, data);
   //console.log(`Data exported to ${exportPath}`);
 }
@@ -25,7 +29,7 @@ function pdfExportData(data: string, nombre: string, fecha: string, hora: string
 
   const exportPath = path.join(process.cwd(), "assets", "pdf_data", filename+".txt");
   fs.writeFileSync(exportPath, data);
-  console.log(`Data exported to ${exportPath}`);
+  //console.log(`Data exported to ${exportPath}`);
 }
 
 function splitExams(text: string): { type: string; content: string }[] {
@@ -59,119 +63,130 @@ async function parseLabPdf(buffer: Buffer) {
   const data = await pdf(buffer);
   const text = data.text;
 
-  // PACIENTE
+  const exams = splitExams(text);
+  exportData(JSON.stringify(exams, null, 2), "exams_data");
+
   const nombre = text.match(/PACIENTE\s*:\s*(.+)/i)?.[1]?.trim() || "";
   const rut = text.match(/IDENTIFICACION\s*:\s*(.+)/i)?.[1]?.trim() || "";
-  const fechaNac = text.match(/FECHA NAC\.?\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4})/)?.[1]?.replace(/-/g, "/") || "";
   const sexo = text.match(/\b(FEMENINO|MASCULINO)\b/i)?.[1] || "";
-  const nroOrden = text.match(/N° ORDEN\s*:\s*(\d+)/i)?.[1]?.trim() || "";
   const edad = text.match(/(\d+)\s*años/i)?.[1] || "";
-  const ingreso = text.match(/INGRESO\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4}\s+[\d]{2}:[\d]{2})/)?.[1]?.replace(/-/g, "/") || "";
-  const tDeMuestra = text.match(/T\. DE MUESTRA\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4}\s+[\d]{2}:[\d]{2})/)?.[1]?.replace(/-/g, "/") || "";
-  const recepcion = text.match(/RECEPCIÓN\s*:\s*([\d]{2}[\/-][\d]{2}[\/-][\d]{4}\s+[\d]{2}:[\d]{2})/)?.[1]?.replace(/-/g, "/") || "";
-  const procedencia = text.match(/PROCEDENCIA\s*:\s*(.+)/i)?.[1]?.trim() || "";
-  const area = text.match(/ÁREA\s*:\s*(.+)/i)?.[1]?.trim() || "";
-  const subprocedencia = text.match(/([A-ZÁÉÍÓÚÑ0-9\s°]+)SUBPROCEDENCIA:/i)?.[1]?.trim() || "";
-  const ficha = text.match(/FICHA\s*:\s*(\d+)/i)?.[1]?.trim() || "";
 
-  // Extract dates/times
-  const recepcionMatch = text.match(/RECEPCIÓN:[\s\S]*\n\d{2}[\/-]\d{2}[\/-]\d{4}\s\d{2}:\d{2}\n(\d{2}[\/-]\d{2}[\/-]\d{4})\s(\d{2}:\d{2})/);
-  const fecha = recepcionMatch?.[1].replace(/-/g, "/") || "";
-  const hora = recepcionMatch?.[2] || "";
+  const parsedExams = exams.map((exam) => {
 
-  if (process.env.NODE_ENV === "development") {
-     pdfExportData(text, nombre, fecha, hora);
-  }
+    const recepcionMatch = exam.content.match(/RECEPCIÓN:[\s\S]*\n\d{2}[\/-]\d{2}[\/-]\d{4}\s\d{2}:\d{2}\n(\d{2}[\/-]\d{2}[\/-]\d{4})\s(\d{2}:\d{2})/);
 
-  // PERFIL HEMATOLÓGICO
-  const hto = text.match(/([\d.,]+)\s*%?\s*HEMATOCRITO/i)?.[1] || "";
-  const hb = text.match(/([\d.,]+)\s*g\/dL\s*HEMOGLOBINA/i)?.[1] || "";
-  const eritro = text.match(/([\d.,]+)\s*mill[oó]n\/uL\s*RCTO DE ERITROCITOS/i)?.[1] || "";
-  const vcm = text.match(/([\d.,]+)\s*fL\s*VCM/i)?.[1] || "";
-  const hcm = text.match(/([\d.,]+)\s*pg\s*HCM/i)?.[1] || "";
-  const chcm = text.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
-  const rcaNeutro = text.match(/([\d.,]+)\s*miles\/uL\s*RCTO ABSOLUTO NEUTR[ÓO]FILOS/i)?.[1] || "";
-  const rcaLinfo = text.match(/([\d.,]+)\s*miles\/uL\s*RCTO ABSOLUTO LINFOCITOS/i)?.[1] || "";
-  const rcaMono = text.match(/([\d.,]+)\s*miles\/uL\s*RCTO ABSOLUTO MONOCITOS/i)?.[1] || "";
+    if (exam.type.includes("ORINA COMPLETA")) {
+      const fechaoc = recepcionMatch?.[1].replace(/-/g, "/") || "";
+      const horaoc = recepcionMatch?.[2] || "";
 
-  // CELULAS (?)
-  const leucoMatch = text.match(/([\d.]+)\s*(miles\/uL|millón\/uL)?\s*R?CTO DE LEUCOCITOS/i);
-  const leuco = leucoMatch ? parseFloat(leucoMatch[1]) * 1000 : null;
+      if (process.env.NODE_ENV === "development") {
+        pdfExportData(text, nombre, fechaoc, horaoc);
+      }
 
-  const neuPercent = text.match(/([\d.,]+)%\s*NEUTR[ÓO]FILOS/i)?.[1];
-  const linfPercent = text.match(/([\d.,]+)%\s*LINFOCITOS/i)?.[1];
-  const monoPercent = text.match(/([\d.,]+)%\s*MONOCITOS/i)?.[1];
-  const eosinPercent = text.match(/([\d.,]+)%\s*EOSIN[ÓO]FILOS/i)?.[1];
-  const basoPercent = text.match(/([\d.,]+)%\s*BAS[ÓO]FILOS/i)?.[1];
+      // ORINA
+      const coloroc = exam.content.match(/COLOR\s*([A-Za-z]+)/i)?.[1] || "";
+      const aspectooc = exam.content.match(/ASPECTO([A-Za-z]+)Transparente/i)?.[1] || "";
+      const densoc = exam.content.match(/(\d+\.\d+)\s*1\.005\s*-\s*1\.025/i)?.[1] || "";
+      const phoc = exam.content.match(/pH([\d.,]+)5\.0 - 7\.0/i)?.[1] || "";
+      const nitritosoc = exam.content.match(/NITRITOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
+      const protoc = exam.content.match(/PROTEINAS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
+      const cetonasoc = exam.content.match(/CUERPOS CETÓNICOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
+      const glucosaoc = exam.content.match(/GLUCOSA\s*([A-Za-z0-9]+)Normal/i)?.[1] || "";
+      const urobiloc = exam.content.match(/UROBILINÓGENO\s*([A-Za-z0-9]+)Normal/i)?.[1] || "";
+      const bilioc = exam.content.match(/BILIRRUBINA\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
+      const mucusoc = exam.content.match(/MUCUS\s*(.*)/i)?.[1] || "";
+      const globRojos = exam.content.match(/GLOBULOS ROJOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
+      const leucosoc = exam.content.match(/LEUCOCITOS\s*(.*)\s*0\s*-\s*4/i)?.[1] || "";
+      const groc = exam.content.match(/ERITROCITOS\s*(.*)\s*0\s*-\s*4/i)?.[1] || "";
+      const bactoc = exam.content.match(/BACTERIAS\s*(.*)No se/i)?.[1] || "";
+      const hialoc = exam.content.match(/CILINDROS HIALINOS\s*(.*)/i)?.[1] || "";
+      const granuloc = exam.content.match(/CILINDROS GRANULOSOS\s*(.*)/i)?.[1] || "";
+      const epiteloc = exam.content.match(/CÉLULAS EPITELIALES\s*(.*)/i)?.[1] || "";
+      const cristaloc = exam.content.match(/CRISTALES\s*(.*)/i)?.[1] || "";
+      const levadoc = exam.content.match(/LEVADURAS\s*(.*)/i)?.[1] || "";
 
-  const neu = leuco && neuPercent ? Math.round((parseFloat(neuPercent) / 100) * leuco).toString() : "";
-  const linfocitos = leuco && linfPercent ? Math.round((parseFloat(linfPercent) / 100) * leuco).toString() : "";
-  const mono = leuco && monoPercent ? Math.round((parseFloat(monoPercent) / 100) * leuco).toString() : "";
-  const eosin = leuco && eosinPercent ? Math.round((parseFloat(eosinPercent) / 100) * leuco).toString() : "";
-  const basofilos = leuco && basoPercent ? Math.round((parseFloat(basoPercent) / 100) * leuco).toString() : "";
+      return {
+        type: exam.type,
+        nombre, rut, edad, sexo, fechaoc, horaoc,
+        coloroc, aspectooc, densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc, mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
+      };
 
-  // ELECTROLITOS
-  const sodio = text.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*SODIO/i)?.[1] || "";
-  const potasio = text.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*POTASIO/i)?.[1] || "";
-  const cloro = text.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*CLORO/i)?.[1] || "";
+    } else {
+      const fecha = recepcionMatch?.[1].replace(/-/g, "/") || "";
+      const hora = recepcionMatch?.[2] || "";
 
-  // BIOQUÍMICA
-  const coltotal = text.match(/([\d.,]+)\s*\[Ideal/i)?.[1] || "";
-  const hdl = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*COLESTEROL HDL/i)?.[1] || "";
-  const tgl = text.match(/([\d.,]+)\s*\[.*?\]mg\/dLTRIGLICÉRIDOS/i)?.[1] || "";
-  const ldl = coltotal && hdl && tgl && parseFloat(tgl) < 400 ? Math.round(parseFloat(coltotal) - parseFloat(hdl) - parseFloat(tgl)/5).toString() : "";
-  const crea = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*CREATININA/i)?.[1] || "";
-  const bun = text.match(/([\d.,]+)\[[^\]]+\]mg\/dL\s*BUN/i)?.[1] || "";
-  const fosforo = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*FÓSFORO/i)?.[1] || "";
-  const magnesio = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*MAGNESIO/i)?.[1] || "";
-  const pcr = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/L\s*PROTEÍNA C REACTIVA/i)?.[1] || "";
-  const glicada = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*%?\s*HEMOGLOBINA GLICOSILADA/i)?.[1] || "";
-  const buncrea = bun && crea ? Math.round(parseFloat(bun) / parseFloat(crea)) : "";
-  const albumina = text.match(/([\d.,]+)\s*\[.*?\]\s*g\/dL\s*ALBÚMINA/i)?.[1] || "";
-  const plaqMatch = text.match(/([\d.]+)\s*miles\/uL\s*RCTO DE PLAQUETAS/i)?.[1] || "";
-  const plaq = plaqMatch ? (parseFloat(plaqMatch) * 1000).toString() : "";
+      if (process.env.NODE_ENV === "development") {
+        pdfExportData(text, nombre, fecha, hora);
+      }
 
-  // GASES ARTERIALES
-  const ph = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*PH/i)?.[1] || "";
-  const pcodos = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*P\s*CO2/i)?.[1] || "";
-  const podos = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*P\s*O2/i)?.[1] || "";
-  const bicarb = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*HCO3/i)?.[1] || "";
-  const tco2 = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*T\s*CO2/i)?.[1] || "";
-  const base = text.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*EBVT/i)?.[1] || ""; //esta como BE en el flujograma
-  const satO2 = text.match(/([\d.,]+)\s*\[[^\]]*\]%?\s*SATURACION\s*DE\s*O2/i)?.[1] || "";
+      // PERFIL HEMATOLÓGICO
+      const hto = exam.content.match(/([\d.,]+)\s*%?\s*HEMATOCRITO/i)?.[1] || "";
+      const hb = exam.content.match(/([\d.,]+)\s*g\/dL\s*HEMOGLOBINA/i)?.[1] || "";
+      const eritro = exam.content.match(/([\d.,]+)\s*mill[oó]n\/uL\s*RCTO DE ERITROCITOS/i)?.[1] || "";
+      const vcm = exam.content.match(/([\d.,]+)\s*fL\s*VCM/i)?.[1] || "";
+      const hcm = exam.content.match(/([\d.,]+)\s*pg\s*HCM/i)?.[1] || "";
+      const chcm = exam.content.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
 
-  // ORINA
-  const coloroc = text.match(/COLOR\s*([A-Za-z]+)/i)?.[1] || "";
-  const aspectooc = text.match(/ASPECTO([A-Za-z]+)Transparente/i)?.[1] || "";
-  const densoc = text.match(/(\d+\.\d+)\s*1\.005\s*-\s*1\.025/i)?.[1] || "";
-  const phoc = text.match(/pH([\d.,]+)5\.0 - 7\.0/i)?.[1] || "";
-  const nitritosoc = text.match(/NITRITOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
-  const protoc = text.match(/PROTEINAS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
-  const cetonasoc = text.match(/CUERPOS CETÓNICOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
-  const glucosaoc = text.match(/GLUCOSA\s*([A-Za-z0-9]+)Normal/i)?.[1] || "";
-  const urobiloc = text.match(/UROBILINÓGENO\s*([A-Za-z0-9]+)Normal/i)?.[1] || "";
-  const bilioc = text.match(/BILIRRUBINA\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
-  const mucusoc = text.match(/MUCUS\s*(.*)/i)?.[1] || "";
-  const globRojos = text.match(/GLOBULOS ROJOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
-  const leucosoc = text.match(/LEUCOCITOS\s*(.*)\s*0\s*-\s*4/i)?.[1] || "";
-  const groc = text.match(/ERITROCITOS\s*(.*)\s*0\s*-\s*4/i)?.[1] || "";
-  const bactoc = text.match(/BACTERIAS\s*(.*)No se/i)?.[1] || "";
-  const hialoc = text.match(/CILINDROS HIALINOS\s*(.*)/i)?.[1] || "";
-  const granuloc = text.match(/CILINDROS GRANULOSOS\s*(.*)/i)?.[1] || "";
-  const epiteloc = text.match(/CÉLULAS EPITELIALES\s*(.*)/i)?.[1] || "";
-  const cristaloc = text.match(/CRISTALES\s*(.*)/i)?.[1] || "";
-  const levadoc = text.match(/LEVADURAS\s*(.*)/i)?.[1] || "";
+      // CELULAS (?)
+      const leucoMatch = exam.content.match(/([\d.]+)\s*(miles\/uL|millón\/uL)?\s*R?CTO DE LEUCOCITOS/i);
+      const leuco = leucoMatch ? parseFloat(leucoMatch[1]) * 1000 : null;
 
-  //console.log("color:" + coloroc + " aspecto:" + aspectooc + " densidad:" + densoc + " ph:" + phoc, "leucos:" + leucosoc, "Eritrocitos:" + groc, " nitritos:" + nitritosoc + " proteinas:" + protoc + " cetonas:" + cetonasoc + " glucosa:" + glucosaoc + " urobilinogeno:" + urobiloc + " bilirrubina:" + bilioc + " globulos rojos:" + globRojos);
+      const neuPercent = exam.content.match(/([\d.,]+)%\s*NEUTR[ÓO]FILOS/i)?.[1];
+      const linfPercent = exam.content.match(/([\d.,]+)%\s*LINFOCITOS/i)?.[1];
+      const monoPercent = exam.content.match(/([\d.,]+)%\s*MONOCITOS/i)?.[1];
+      const eosinPercent = exam.content.match(/([\d.,]+)%\s*EOSIN[ÓO]FILOS/i)?.[1];
+      const basoPercent = exam.content.match(/([\d.,]+)%\s*BAS[ÓO]FILOS/i)?.[1];
 
-  return {
-    nombre, rut, fecha, hora, 
-    hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
-    sodio, potasio, cloro, 
-    coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq,
-    ph, pcodos, podos, bicarb, base, satO2,
-    coloroc, aspectooc, densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc, mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
-  };
+      const neu = leuco && neuPercent ? Math.round((parseFloat(neuPercent) / 100) * leuco).toString() : "";
+      const linfocitos = leuco && linfPercent ? Math.round((parseFloat(linfPercent) / 100) * leuco).toString() : "";
+      const mono = leuco && monoPercent ? Math.round((parseFloat(monoPercent) / 100) * leuco).toString() : "";
+      const eosin = leuco && eosinPercent ? Math.round((parseFloat(eosinPercent) / 100) * leuco).toString() : "";
+      const basofilos = leuco && basoPercent ? Math.round((parseFloat(basoPercent) / 100) * leuco).toString() : "";
+
+      // ELECTROLITOS
+      const sodio = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*SODIO/i)?.[1] || "";
+      const potasio = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*POTASIO/i)?.[1] || "";
+      const cloro = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*CLORO/i)?.[1] || "";
+
+      // BIOQUÍMICA
+      const coltotal = exam.content.match(/([\d.,]+)\s*\[Ideal/i)?.[1] || "";
+      const hdl = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*COLESTEROL HDL/i)?.[1] || "";
+      const tgl = exam.content.match(/([\d.,]+)\s*\[.*?\]mg\/dLTRIGLICÉRIDOS/i)?.[1] || "";
+      const ldl = coltotal && hdl && tgl && parseFloat(tgl) < 400 ? Math.round(parseFloat(coltotal) - parseFloat(hdl) - parseFloat(tgl)/5).toString() : "";
+      const crea = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*CREATININA/i)?.[1] || "";
+      const bun = exam.content.match(/([\d.,]+)\[[^\]]+\]mg\/dL\s*BUN/i)?.[1] || "";
+      const fosforo = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*FÓSFORO/i)?.[1] || "";
+      const magnesio = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*MAGNESIO/i)?.[1] || "";
+      const pcr = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/L\s*PROTEÍNA C REACTIVA/i)?.[1] || "";
+      const glicada = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*%?\s*HEMOGLOBINA GLICOSILADA/i)?.[1] || "";
+      const buncrea = bun && crea ? Math.round(parseFloat(bun) / parseFloat(crea)) : "";
+      const albumina = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*g\/dL\s*ALBÚMINA/i)?.[1] || "";
+      const plaqMatch = exam.content.match(/([\d.]+)\s*miles\/uL\s*RCTO DE PLAQUETAS/i)?.[1] || "";
+      const plaq = plaqMatch ? (parseFloat(plaqMatch) * 1000).toString() : "";
+      const tropo = text.match(/([\d.,]+)\s*\[.*?\]\s*ng\/L\s*TROPONINA T ULTRASENSIBLE/i)?.[1] || "";
+
+      // GASES ARTERIALES
+      const ph = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*PH/i)?.[1] || "";
+      const pcodos = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*P\s*CO2/i)?.[1] || "";
+      const podos = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*P\s*O2/i)?.[1] || "";
+      const bicarb = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*HCO3/i)?.[1] || "";
+      const tco2 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*T\s*CO2/i)?.[1] || "";
+      const base = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*EBVT/i)?.[1] || ""; //esta como BE en el flujograma
+      const satO2 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]%?\s*SATURACION\s*DE\s*O2/i)?.[1] || "";
+
+      return {
+        type: exam.type,
+        nombre, rut, edad, sexo, fecha, hora,
+        hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
+        sodio, potasio, cloro, 
+        coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq,
+        ph, pcodos, podos, bicarb, base, satO2
+      };
+    }
+  });
+
+  return parsedExams
+
 }
 
 export const POST = async (req: Request) => {
@@ -193,34 +208,61 @@ export const POST = async (req: Request) => {
       nullGetter: () => "",
     });
 
-    // Parse each PDF and create placeholder set
-    const placeholdersArray = await Promise.all(
-      files.map(async (file, idx) => {
+    // Flatten all parsed exams from all files
+    let parsedExams = (await Promise.all(
+      files.map(async (file) => {
         const buffer = Buffer.from(await file.arrayBuffer());
-        const parsed = await parseLabPdf(buffer);
-        //console.log(`Parsed File ${idx + 1}:`, parsed);
-        const pdfIndex = idx + 1;
-
-        // Add suffix (_1, _2, etc.) to keys
-        return Object.fromEntries(
-          Object.entries(parsed).map(([k, v]) => [`${k}_${pdfIndex}`, v])
-        );
+        return parseLabPdf(buffer);
       })
-    );
+    ))
 
-    // Sort by fecha - hora
-    placeholdersArray.sort((a, b) => {
-      const dateA = parseFechaHora(String(a.fecha ?? ""), String(a.hora ?? ""));
-      const dateB = parseFechaHora(String(b.fecha ?? ""), String(b.hora ?? ""));
-      return dateA.getTime() - dateB.getTime(); // ascending
-    });
+    exportData(JSON.stringify(parsedExams, null, 2), "all_parsed_exams");
+    const allParsedExams = parsedExams.flat();
+    exportData(JSON.stringify(allParsedExams, null, 2), "flattened_parsed_exams");
 
-    // Merge all placeholders into a single object
+    // Separate ORINA vs normal exams
+    const orinaExams = allParsedExams
+      .filter((exam) => exam.type.includes("ORINA COMPLETA"))
+      .sort((a, b) => {
+        const dateA = parseFechaHora(String(a.fecha ?? ""), String(a.hora ?? ""));
+        const dateB = parseFechaHora(String(b.fecha ?? ""), String(b.hora ?? ""));
+        return dateA.getTime() - dateB.getTime();
+      });
+
+    const normalExams = allParsedExams
+      .filter((exam) => !exam.type.includes("ORINA COMPLETA"))
+      .sort((a, b) => {
+        const dateA = parseFechaHora(String(a.fecha ?? ""), String(a.hora ?? ""));
+        const dateB = parseFechaHora(String(b.fecha ?? ""), String(b.hora ?? ""));
+        return dateA.getTime() - dateB.getTime();
+      });
+
+    // Assign independent counters
+    let orinaCounter = 0;
+    let normalCounter = 0;
+    let cultivosCounter = 0;
+
+    const placeholdersArray = [
+      ...orinaExams.map((exam) => {
+        const index = ++orinaCounter;
+        return Object.fromEntries(
+          Object.entries(exam).map(([k, v]) => [`${k}_${index}`, v])
+        );
+      }),
+      ...normalExams.map((exam) => {
+        const index = ++normalCounter;
+        return Object.fromEntries(
+          Object.entries(exam).map(([k, v]) => [`${k}_${index}`, v])
+        );
+      }),
+    ];
+
+    // Merge placeholders into one object for docxtemplater
     const mergedPlaceholders = Object.assign({}, ...placeholdersArray);
+    
     if (process.env.NODE_ENV === "development") {
       exportData(JSON.stringify(placeholdersArray, null, 2), "exported_data");
     }
-    //console.log("Merged Placeholders:", mergedPlaceholders, "Placeholders Array:", placeholdersArray);
 
     // Render template with extracted data
     doc.render(mergedPlaceholders);
