@@ -33,7 +33,7 @@ function pdfExportData(data: string, nombre: string, fecha: string, hora: string
 }
 
 function splitExams(text: string): { type: string; content: string }[] {
-  const examRegex = /(ORINA COMPLETA.*|PERFIL HEMATOL[ÓO]GICO.*|BIOQU[IÍ]MICA.*|HEMOSTASIA.*|QU[ÍI]MICA)/gi;
+  const examRegex = /(ORINA COMPLETA.*|PERFIL HEMATOL[ÓO]GICO.*|BIOQU[IÍ]MICA.*|HEMOSTASIA.*|[AÁ]REA:\s*QU[ÍI]MICA|.*CULTIVO.*)/gi;
   const matches = [...text.matchAll(examRegex)];
 
   const exams: { type: string; content: string }[] = [];
@@ -58,13 +58,12 @@ function splitExams(text: string): { type: string; content: string }[] {
   return exams;
 }
 
-
-async function parseLabPdf(buffer: Buffer) {
+async function parseLabPdf(buffer: Buffer, count: number) {
   const data = await pdf(buffer);
   const text = data.text;
 
   const exams = splitExams(text);
-  exportData(JSON.stringify(exams, null, 2), "exams_data");
+  //exportData(JSON.stringify(exams, null, 2), "exams_data"+count);
 
   const nombre = text.match(/PACIENTE\s*:\s*(.+)/i)?.[1]?.trim() || "";
   const rut = text.match(/IDENTIFICACION\s*:\s*(.+)/i)?.[1]?.trim() || "";
@@ -179,7 +178,7 @@ async function parseLabPdf(buffer: Buffer) {
         nombre, rut, edad, sexo, fecha, hora,
         hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
         sodio, potasio, cloro, 
-        coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq,
+        coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq, tropo,
         ph, pcodos, podos, bicarb, base, satO2
       };
     }
@@ -210,32 +209,30 @@ export const POST = async (req: Request) => {
 
     // Flatten all parsed exams from all files
     const parsedExams = (await Promise.all(
-      files.map(async (file) => {
+      files.map(async (file, index) => {
         const buffer = Buffer.from(await file.arrayBuffer());
-        return parseLabPdf(buffer);
+        return parseLabPdf(buffer, index+1);
       })
-    ))
+    )).flat();
 
-    exportData(JSON.stringify(parsedExams, null, 2), "all_parsed_exams");
-    const allParsedExams = parsedExams.flat();
-    exportData(JSON.stringify(allParsedExams, null, 2), "flattened_parsed_exams");
+    exportData(JSON.stringify(parsedExams, null, 2), "parsed_exams");
 
     // Separate ORINA vs normal exams
-    const orinaExams = allParsedExams
+    const orinaExams = parsedExams
       .filter((exam) => exam.type.includes("ORINA COMPLETA"))
       .sort((a, b) => {
         const dateA = parseFechaHora(String(a.fecha ?? ""), String(a.hora ?? ""));
         const dateB = parseFechaHora(String(b.fecha ?? ""), String(b.hora ?? ""));
         return dateA.getTime() - dateB.getTime();
-      });
+    });
 
-    const normalExams = allParsedExams
+    const normalExams = parsedExams
       .filter((exam) => !exam.type.includes("ORINA COMPLETA"))
       .sort((a, b) => {
         const dateA = parseFechaHora(String(a.fecha ?? ""), String(a.hora ?? ""));
         const dateB = parseFechaHora(String(b.fecha ?? ""), String(b.hora ?? ""));
         return dateA.getTime() - dateB.getTime();
-      });
+    });
 
     // Assign independent counters
     let orinaCounter = 0;
