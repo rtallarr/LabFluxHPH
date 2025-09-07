@@ -196,18 +196,20 @@ async function parseLabPdf(buffer: Buffer, count: number) {
       // VFGE
       const creaNum = parseFloat(crea);
       const edadNum = parseFloat(edad);
-      let vfge = "";
-      if (sexo == "FEMENINO" ) {
-        if (creaNum <= 0.7) {
-          vfge = Math.round(143.704 * Math.pow(creaNum/0.7, -0.241) * Math.pow(0.9938, edadNum)).toString();
-        } else {
-          vfge = Math.round(143.704 * Math.pow(creaNum/0.7, -1.2) * Math.pow(0.9938, edadNum)).toString();
-        }
-      } else if (sexo == "MASCULINO") {
-        if (creaNum <= 0.9) {
-          vfge = Math.round(142 * Math.pow(creaNum/0.9, -0.302) * Math.pow(0.9938, edadNum)).toString();
-        } else {
-          vfge = Math.round(142 * Math.pow(creaNum/0.9, -1.2) * Math.pow(0.9938, edadNum)).toString();
+      let vfg = "";
+      if (creaNum && edadNum && sexo) {
+        if (sexo == "FEMENINO" ) {
+          if (creaNum <= 0.7) {
+            vfg = Math.round(143.704 * Math.pow(creaNum/0.7, -0.241) * Math.pow(0.9938, edadNum)).toString();
+          } else {
+            vfg = Math.round(143.704 * Math.pow(creaNum/0.7, -1.2) * Math.pow(0.9938, edadNum)).toString();
+          }
+        } else if (sexo == "MASCULINO") {
+          if (creaNum <= 0.9) {
+            vfg = Math.round(142 * Math.pow(creaNum/0.9, -0.302) * Math.pow(0.9938, edadNum)).toString();
+          } else {
+            vfg = Math.round(142 * Math.pow(creaNum/0.9, -1.2) * Math.pow(0.9938, edadNum)).toString();
+          }
         }
       }
 
@@ -225,7 +227,7 @@ async function parseLabPdf(buffer: Buffer, count: number) {
         nombre, rut, edad, sexo, fecha, hora,
         hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
         sodio, potasio, cloro, 
-        glucosa, coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq, tropo, vfge,
+        glucosa, coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq, tropo, vfg,
         calcio, calcioion, gpt, got, ggt, fa, bd, bt, lactico, ck, ckmb, ldh,
         ph, pcodos, podos, bicarb, base, satO2
       };
