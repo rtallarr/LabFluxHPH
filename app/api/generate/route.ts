@@ -44,7 +44,7 @@ function splitExams(text: string): { type: string; content: string }[] {
     const type = matches[i][0].trim();
     const content = text.slice(startIndex, endIndex);
 
-    if (type.includes("ORINA COMPLETA") || type.includes("CULTIVOS")) {
+    if (type.includes("ORINA COMPLETA") || type.includes("CULTIVO")) {
       exams.push({ type, content });
     } else {
       const existing = exams.find((s) => s.type === "EXÁMENES GENERALES");
@@ -108,6 +108,21 @@ async function parseLabPdf(buffer: Buffer, count: number) {
         type: exam.type,
         nombre, rut, edad, sexo, fechaoc, horaoc,
         coloroc, aspectooc, densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc, mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
+      };
+
+    } else if (exam.type.includes("CULTIVOS")) {
+      const fechacul = recepcionMatch?.[1].replace(/-/g, "/") || "";
+      const horacul = recepcionMatch?.[2] || "";
+
+      if (process.env.NODE_ENV === "development") {
+        pdfExportData(text, nombre, fechacul, horacul);
+      }
+
+      // CULTIVOS
+
+      return {
+        type: exam.type,
+        nombre, rut, edad, sexo, fechacul, horacul,
       };
 
     } else {
@@ -219,7 +234,7 @@ export const POST = async (req: Request) => {
       exportData(JSON.stringify(parsedExams, null, 2), "parsed_exams");
     }
 
-    // Separate ORINA vs normal exams
+    // Separate ORINA vs CULTIVOS vs general exams
     const orinaExams = parsedExams
       .filter((exam) => exam.type.includes("ORINA COMPLETA"))
       .sort((a, b) => {
@@ -228,8 +243,16 @@ export const POST = async (req: Request) => {
         return dateA.getTime() - dateB.getTime();
     });
 
+    const cultivosExams = parsedExams
+      .filter((exam) => exam.type.includes("CULTIVO"))
+      .sort((a, b) => {
+        const dateA = parseFechaHora(String(a.fecha ?? ""), String(a.hora ?? ""));
+        const dateB = parseFechaHora(String(b.fecha ?? ""), String(b.hora ?? ""));
+        return dateA.getTime() - dateB.getTime();
+    });
+
     const normalExams = parsedExams
-      .filter((exam) => !exam.type.includes("ORINA COMPLETA"))
+      .filter((exam) => !exam.type.includes("ORINA COMPLETA") && !exam.type.includes("CULTIVO"))
       .sort((a, b) => {
         const dateA = parseFechaHora(String(a.fecha ?? ""), String(a.hora ?? ""));
         const dateB = parseFechaHora(String(b.fecha ?? ""), String(b.hora ?? ""));
@@ -239,10 +262,17 @@ export const POST = async (req: Request) => {
     // Assign independent counters
     let orinaCounter = 0;
     let normalCounter = 0;
+    let cultivosCounter = 0;
 
     const placeholdersArray = [
       ...orinaExams.map((exam) => {
         const index = ++orinaCounter;
+        return Object.fromEntries(
+          Object.entries(exam).map(([k, v]) => [`${k}_${index}`, v])
+        );
+      }),
+      ...cultivosExams.map((exam) => {
+        const index = ++cultivosCounter;
         return Object.fromEntries(
           Object.entries(exam).map(([k, v]) => [`${k}_${index}`, v])
         );
