@@ -215,7 +215,9 @@ export const POST = async (req: Request) => {
       })
     )).flat();
 
-    exportData(JSON.stringify(parsedExams, null, 2), "parsed_exams");
+    if (process.env.NODE_ENV === "development") {
+      exportData(JSON.stringify(parsedExams, null, 2), "parsed_exams");
+    }
 
     // Separate ORINA vs normal exams
     const orinaExams = parsedExams
