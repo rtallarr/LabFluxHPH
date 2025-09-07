@@ -141,7 +141,7 @@ async function parseLabPdf(buffer: Buffer, count: number) {
       const hcm = exam.content.match(/([\d.,]+)\s*pg\s*HCM/i)?.[1] || "";
       const chcm = exam.content.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
 
-      // CELULAS (?)
+      // CELULAS
       const leucoMatch = exam.content.match(/([\d.]+)\s*(miles\/uL|millón\/uL)?\s*R?CTO DE LEUCOCITOS/i);
       const leuco = leucoMatch ? parseFloat(leucoMatch[1]) * 1000 : null;
 
@@ -157,12 +157,14 @@ async function parseLabPdf(buffer: Buffer, count: number) {
       const eosin = leuco && eosinPercent ? Math.round((parseFloat(eosinPercent) / 100) * leuco).toString() : "";
       const basofilos = leuco && basoPercent ? Math.round((parseFloat(basoPercent) / 100) * leuco).toString() : "";
 
+
       // ELECTROLITOS
       const sodio = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*SODIO/i)?.[1] || "";
       const potasio = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*POTASIO/i)?.[1] || "";
       const cloro = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*CLORO/i)?.[1] || "";
 
       // BIOQUÍMICA
+      const glucosa = exam.content.match(/GLUCOSA\s*([A-Za-z0-9]+)Normal/i)?.[1] || "";
       const coltotal = exam.content.match(/([\d.,]+)\s*\[Ideal/i)?.[1] || "";
       const hdl = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*COLESTEROL HDL/i)?.[1] || "";
       const tgl = exam.content.match(/([\d.,]+)\s*\[.*?\]mg\/dLTRIGLICÉRIDOS/i)?.[1] || "";
@@ -171,13 +173,43 @@ async function parseLabPdf(buffer: Buffer, count: number) {
       const bun = exam.content.match(/([\d.,]+)\[[^\]]+\]mg\/dL\s*BUN/i)?.[1] || "";
       const fosforo = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*FÓSFORO/i)?.[1] || "";
       const magnesio = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*MAGNESIO/i)?.[1] || "";
+      const calcio = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*CALCIO/i)?.[1] || "";
+      const calcioion = text.match(/([\d.,]+)\s*\[[\s\S]*?\]\s*mmol\/L\s*CALCIO IONICO/i)?.[1] || "";
+      const gpt = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*GPT/i)?.[1] || "";
+      const got = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*GOT/i)?.[1] || "";
+      const ggt = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U[I]?\/L\s*GGT/i)?.[1] || "";
+      const fa = text.match(/(\d+(?:[.,]\d+)?)\s*\[[^\]]+\]\s*U\/L\s*FOSFATASA ALCALINA/i)?.[1] || "";
+      const bd = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*BILIRRUBINA DIRECTA/i)?.[1] || "";
+      const bt = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*BILIRRUBINA TOTAL/i)?.[1] || "";
       const pcr = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/L\s*PROTEÍNA C REACTIVA/i)?.[1] || "";
+      const lactico = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mmol\/L\s*ÁCIDO LÁCTICO/i)?.[1] || "";
+      const ldh = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*LDH/i)?.[1] || "";
+      const ck = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*CREATINKINASA TOTAL/i)?.[1] || "";
+      const ckmb = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*CREATINKINASA MB/i)?.[1] || "";
       const glicada = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*%?\s*HEMOGLOBINA GLICOSILADA/i)?.[1] || "";
       const buncrea = bun && crea ? Math.round(parseFloat(bun) / parseFloat(crea)) : "";
       const albumina = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*g\/dL\s*ALBÚMINA/i)?.[1] || "";
       const plaqMatch = exam.content.match(/([\d.]+)\s*miles\/uL\s*RCTO DE PLAQUETAS/i)?.[1] || "";
       const plaq = plaqMatch ? (parseFloat(plaqMatch) * 1000).toString() : "";
       const tropo = text.match(/([\d.,]+)\s*\[.*?\]\s*ng\/L\s*TROPONINA T ULTRASENSIBLE/i)?.[1] || "";
+
+      // VFGE
+      const creaNum = parseFloat(crea);
+      const edadNum = parseFloat(edad);
+      let vfge = "";
+      if (sexo == "FEMENINO" ) {
+        if (creaNum <= 0.7) {
+          vfge = Math.round(143.704 * Math.pow(creaNum/0.7, -0.241) * Math.pow(0.9938, edadNum)).toString();
+        } else {
+          vfge = Math.round(143.704 * Math.pow(creaNum/0.7, -1.2) * Math.pow(0.9938, edadNum)).toString();
+        }
+      } else if (sexo == "MASCULINO") {
+        if (creaNum <= 0.9) {
+          vfge = Math.round(142 * Math.pow(creaNum/0.9, -0.302) * Math.pow(0.9938, edadNum)).toString();
+        } else {
+          vfge = Math.round(142 * Math.pow(creaNum/0.9, -1.2) * Math.pow(0.9938, edadNum)).toString();
+        }
+      }
 
       // GASES ARTERIALES
       const ph = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*PH/i)?.[1] || "";
@@ -193,7 +225,8 @@ async function parseLabPdf(buffer: Buffer, count: number) {
         nombre, rut, edad, sexo, fecha, hora,
         hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
         sodio, potasio, cloro, 
-        coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq, tropo,
+        glucosa, coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq, tropo, vfge,
+        calcio, calcioion, gpt, got, ggt, fa, bd, bt, lactico, ck, ckmb, ldh,
         ph, pcodos, podos, bicarb, base, satO2
       };
     }
