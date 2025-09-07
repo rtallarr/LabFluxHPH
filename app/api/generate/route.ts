@@ -164,7 +164,7 @@ async function parseLabPdf(buffer: Buffer, count: number) {
       const cloro = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*CLORO/i)?.[1] || "";
 
       // BIOQUÍMICA
-      const glucosa = exam.content.match(/GLUCOSA\s*([A-Za-z0-9]+)Normal/i)?.[1] || "";
+      const glucosa = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*GLUCOSA/i)?.[1] || "";
       const coltotal = exam.content.match(/([\d.,]+)\s*\[Ideal/i)?.[1] || "";
       const hdl = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*COLESTEROL HDL/i)?.[1] || "";
       const tgl = exam.content.match(/([\d.,]+)\s*\[.*?\]mg\/dLTRIGLICÉRIDOS/i)?.[1] || "";
