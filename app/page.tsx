@@ -94,7 +94,7 @@ export default function HomePage() {
       </header>
 
       {/* Main Card */}
-      <div className="max-w-xl mx-auto mt-8 p-6 bg-white rounded-2xl shadow-lg transition-all">
+      <div className="max-w-xl mx-auto mt-8 mb-8 p-6 bg-white rounded-2xl shadow-lg transition-all">
         <p className="text-gray-700 text-center mb-6">
           Sube 1 o más PDFs con resultados de laboratorio y recibe tu flujograma listo.
         </p>
@@ -199,7 +199,7 @@ export default function HomePage() {
 
       <footer className="bg-gray-200 text-gray-700 py-4 mt-8 text-center mt-auto">
         <p>Comentarios, sugerencias y problemas dejarlos en <a href="https://github.com/rtallarr/LabFluxHPH/issues" className="underline hover:text-purple-600">github</a></p>
-        <p>&copy; {new Date().getFullYear()} <a href="https://www.tallar.cl" className="hover:text-purple-600">Rodrigo Tallar</a> y Cristóbal Fuentes</p>
+        <p>&copy; {new Date().getFullYear()} <a href="https://www.tallar.cl" className="hover:text-purple-600">Rodrigo Tallar</a></p>
       </footer>
 
     </div>
