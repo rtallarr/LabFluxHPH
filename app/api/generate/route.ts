@@ -73,7 +73,10 @@ async function parseLabPdf(buffer: Buffer, count: number) {
   const text = data.text;
 
   const exams = splitExams(text);
-  exportData(JSON.stringify(exams, null, 2), "exam_split"+count);
+  
+  if (process.env.NODE_ENV === "development") {
+    exportData(JSON.stringify(exams, null, 2), "exam_split"+count);
+  }
 
   const nombre = text.match(/PACIENTE\s*:\s*(.+)/i)?.[1]?.trim() || "";
   const rut = text.match(/IDENTIFICACION\s*:\s*(.+)/i)?.[1]?.trim() || "";
