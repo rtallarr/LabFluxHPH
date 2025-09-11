@@ -21,6 +21,7 @@ function exportData(data: string, filename: string) {
   //console.log(`Data exported to ${exportPath}`);
 }
 
+//problema con le fecha hace que se sobreescriban los archivos
 function pdfExportData(data: string, nombre: string, fecha: string, hora: string) {
   const filename = nombre.split(" ")[0] + fecha.replace(/\//g, "-") + "_" + hora.replace(/:/g, "_");
   const exportDir = path.join(process.cwd(), "assets", "pdf_data");
@@ -33,27 +34,36 @@ function pdfExportData(data: string, nombre: string, fecha: string, hora: string
 }
 
 function splitExams(text: string): { type: string; content: string }[] {
-  const examRegex = /(ORINA COMPLETA.*|PERFIL HEMATOL[ÓO]GICO.*|BIOQU[IÍ]MICA.*|HEMOSTASIA.*|[AÁ]REA:\s*QU[ÍI]MICA|.*CULTIVO.*)/gi;
-  const matches = [...text.matchAll(examRegex)];
+  // Step 1: Split by each RECEPCIÓN section
+  const sections = text.split(/(?=RECEPCI[OÓ]N\s*:)/g);
 
   const exams: { type: string; content: string }[] = [];
+  const specialExamRegex = /(ORINA COMPLETA.*|.*CULTIVO.*)/gi;
 
-  for (let i = 0; i < matches.length; i++) {
-    const startIndex = matches[i].index!;
-    const endIndex = matches[i + 1]?.index ?? text.length;
-    const type = matches[i][0].trim();
-    const content = text.slice(startIndex, endIndex);
+  for (const section of sections) {
+    const trimmedSection = section.trim();
 
-    if (type.includes("ORINA COMPLETA") || type.includes("CULTIVO")) {
-      exams.push({ type, content });
-    } else {
-      const existing = exams.find((s) => s.type === "EXÁMENES GENERALES");
-      if (existing) {
-        existing.content += "\n" + content;
-      } else {
-        exams.push({ type: "EXÁMENES GENERALES", content });
-      }
+    if (trimmedSection.startsWith("PACIENTE") || trimmedSection.startsWith("Unidad")) {
+      continue; // skip irrelevant sections
     }
+
+    const matches = [...trimmedSection.matchAll(specialExamRegex)];
+
+    let type: string;
+    if (matches.length === 0) {
+      type = "EXÁMENES GENERALES";
+    } else {
+      type = matches[0][0].trim();
+    }
+
+    // Check if this type already exists
+    const existing = exams.find(e => e.type === type);
+    if (existing) {
+      existing.content += "\n\n" + trimmedSection; // merge content
+    } else {
+      exams.push({ type, content: trimmedSection });
+    }
+
   }
   return exams;
 }
@@ -63,7 +73,7 @@ async function parseLabPdf(buffer: Buffer, count: number) {
   const text = data.text;
 
   const exams = splitExams(text);
-  //exportData(JSON.stringify(exams, null, 2), "exams_data"+count);
+  exportData(JSON.stringify(exams, null, 2), "exam_split"+count);
 
   const nombre = text.match(/PACIENTE\s*:\s*(.+)/i)?.[1]?.trim() || "";
   const rut = text.match(/IDENTIFICACION\s*:\s*(.+)/i)?.[1]?.trim() || "";
@@ -71,15 +81,18 @@ async function parseLabPdf(buffer: Buffer, count: number) {
   const edad = text.match(/(\d+)\s*años/i)?.[1] || "";
 
   const parsedExams = exams.map((exam) => {
-
-    const recepcionMatch = exam.content.match(/RECEPCIÓN:[\s\S]*\n\d{2}[\/-]\d{2}[\/-]\d{4}\s\d{2}:\d{2}\n(\d{2}[\/-]\d{2}[\/-]\d{4})\s(\d{2}:\d{2})/);
+    const recepcionMatch = exam.content.match(/RECEPCI[OÓ]N:[\s\S]*?\d{2}[\/-]\d{2}[\/-]\d{4}\s\d{2}:\d{2}[\s\S]*?(\d{2}[\/-]\d{2}[\/-]\d{4})\s(\d{2}:\d{2})/);
 
     if (exam.type.includes("ORINA COMPLETA")) {
       const fechaoc = recepcionMatch?.[1].replace(/-/g, "/") || "";
       const horaoc = recepcionMatch?.[2] || "";
 
       if (process.env.NODE_ENV === "development") {
-        pdfExportData(text, nombre, fechaoc, horaoc);
+        if (text && nombre && fechaoc && horaoc) {
+          pdfExportData(text, nombre, fechaoc, horaoc);
+        } else {
+          pdfExportData(text, "missing", "_data", count.toString());
+        }
       }
 
       // ORINA
@@ -115,7 +128,11 @@ async function parseLabPdf(buffer: Buffer, count: number) {
       const horacul = recepcionMatch?.[2] || "";
 
       if (process.env.NODE_ENV === "development") {
-        pdfExportData(text, nombre, fechacul, horacul);
+        if (text && nombre && fechacul && horacul) {
+          pdfExportData(text, nombre, fechacul, horacul);
+        } else {
+          pdfExportData(text, "missing", "_data", count.toString());
+        }
       }
 
       // CULTIVOS
@@ -130,7 +147,11 @@ async function parseLabPdf(buffer: Buffer, count: number) {
       const hora = recepcionMatch?.[2] || "";
 
       if (process.env.NODE_ENV === "development") {
-        pdfExportData(text, nombre, fecha, hora);
+        if (text && nombre && fecha && hora) {
+          pdfExportData(text, nombre, fecha, hora);
+        } else {
+          pdfExportData(text, "missing", "_data", count.toString());
+        }
       }
 
       // PERFIL HEMATOLÓGICO
