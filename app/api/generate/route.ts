@@ -178,6 +178,10 @@ async function parseLabPdf(buffer: Buffer, count: number) {
       const eosin = leuco && eosinPercent ? Math.round((parseFloat(eosinPercent) / 100) * leuco).toString() : "";
       const basofilos = leuco && basoPercent ? Math.round((parseFloat(basoPercent) / 100) * leuco).toString() : "";
 
+      // COAGULACION
+      const tp = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]%PORCENTAJE/i)?.[1] || "";
+      const inr = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]INR/i)?.[1] || "";
+      const ttpk = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]segTTPA/i)?.[1] || "";
 
       // ELECTROLITOS
       const sodio = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*SODIO/i)?.[1] || "";
@@ -195,17 +199,20 @@ async function parseLabPdf(buffer: Buffer, count: number) {
       const fosforo = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*FÓSFORO/i)?.[1] || "";
       const magnesio = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*MAGNESIO/i)?.[1] || "";
       const calcio = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*CALCIO/i)?.[1] || "";
-      const calcioion = text.match(/([\d.,]+)\s*\[[\s\S]*?\]\s*mmol\/L\s*CALCIO IONICO/i)?.[1] || "";
+      const calcioion = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mmol\/LCALCIO IONICO/i)?.[1] || "";
+      const acurico = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLÁCIDO ÚRICO/i)?.[1] || "";
       const gpt = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*GPT/i)?.[1] || "";
       const got = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*GOT/i)?.[1] || "";
       const ggt = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U[I]?\/L\s*GGT/i)?.[1] || "";
       const fa = text.match(/(\d+(?:[.,]\d+)?)\s*\[[^\]]+\]\s*U\/L\s*FOSFATASA ALCALINA/i)?.[1] || "";
       const bd = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*BILIRRUBINA DIRECTA/i)?.[1] || "";
       const bt = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*BILIRRUBINA TOTAL/i)?.[1] || "";
+      const amilasa = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]U\/LAMILASA/i)?.[1] || "";
+      const proteinas = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]g\/dLPROTEÍNAS TOTALES/i)?.[1] || "";
       const pcr = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/L\s*PROTEÍNA C REACTIVA/i)?.[1] || "";
       const lactico = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mmol\/L\s*ÁCIDO LÁCTICO/i)?.[1] || "";
       const ldh = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*LDH/i)?.[1] || "";
-      const ck = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*CREATINKINASA TOTAL/i)?.[1] || "";
+      const ck = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]U\/LCREATINKINASA TOTAL/i)?.[1] || "";
       const ckmb = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*CREATINKINASA MB/i)?.[1] || "";
       const glicada = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*%?\s*HEMOGLOBINA GLICOSILADA/i)?.[1] || "";
       const buncrea = bun && crea ? Math.round(parseFloat(bun) / parseFloat(crea)) : "";
@@ -213,6 +220,9 @@ async function parseLabPdf(buffer: Buffer, count: number) {
       const plaqMatch = exam.content.match(/([\d.]+)\s*miles\/uL\s*RCTO DE PLAQUETAS/i)?.[1] || "";
       const plaq = plaqMatch ? (parseFloat(plaqMatch) * 1000).toString() : "";
       const tropo = text.match(/([\d.,]+)\s*\[.*?\]\s*ng\/L\s*TROPONINA T ULTRASENSIBLE/i)?.[1] || "";
+      const vitb = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]pg\/mLNIVELES VITAMINA B12/i)?.[1] || "";
+
+      const tsh = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]μUI\/mLHORMONA TIROESTIMULANTE \(TSH\)/i)?.[1] || "";
 
       // VFGE
       const creaNum = parseFloat(crea);
@@ -248,8 +258,9 @@ async function parseLabPdf(buffer: Buffer, count: number) {
         nombre, rut, edad, sexo, fecha, hora,
         hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
         sodio, potasio, cloro, 
+        tp, inr, ttpk,
         glucosa, coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq, tropo, vfg,
-        calcio, calcioion, gpt, got, ggt, fa, bd, bt, lactico, ck, ckmb, ldh,
+        calcio, calcioion, gpt, got, ggt, fa, bd, bt, lactico, ck, ckmb, ldh, amilasa, proteinas, acurico, vitb,
         ph, pcodos, podos, bicarb, base, satO2
       };
     }
