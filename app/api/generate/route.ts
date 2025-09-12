@@ -5,6 +5,8 @@ import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import pdf from "pdf-parse";
 
+import { Exam } from "@/app/types/exam";
+
 function parseFechaHora(fecha: string, hora: string): Date {
   const [day, month, year] = fecha.split("/").map(Number);
   const [hours, minutes] = hora.split(":").map(Number);
@@ -68,7 +70,7 @@ function splitExams(text: string): { type: string; content: string }[] {
   return exams;
 }
 
-async function parseLabPdf(buffer: Buffer, count: number) {
+async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
   const data = await pdf(buffer);
   const text = data.text;
 
@@ -123,7 +125,8 @@ async function parseLabPdf(buffer: Buffer, count: number) {
       return {
         type: exam.type,
         nombre, rut, edad, sexo, fechaoc, horaoc,
-        coloroc, aspectooc, densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc, mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
+        coloroc, aspectooc, densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc,
+        globRojos, mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
       };
 
     } else if (exam.type.includes("CULTIVOS")) {
@@ -283,7 +286,7 @@ export const POST = async (req: Request) => {
     }
 
     // Load DOCX template
-    const templatePath = path.join(process.cwd(), "assets", "template.docx");
+    const templatePath = path.join(process.cwd(), "assets", "template_norm.docx");
     const content = fs.readFileSync(templatePath, "binary");
     const zip = new PizZip(content);
     const doc = new Docxtemplater(zip, {
@@ -335,7 +338,7 @@ export const POST = async (req: Request) => {
 
     const skipKeys = ["rut", "nombre", "edad", "sexo"];
 
-    function mapExamWithIndex(exam: Record<string, any>, index: number, shouldSkipKeys: boolean = true) {
+    function mapExamWithIndex(exam: Exam, index: number, shouldSkipKeys: boolean = true) {
       return Object.fromEntries(
         Object.entries(exam)
           .filter(([k]) => !shouldSkipKeys || !skipKeys.includes(k.toLowerCase()))
