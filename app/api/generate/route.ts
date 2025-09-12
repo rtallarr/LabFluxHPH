@@ -79,7 +79,7 @@ async function parseLabPdf(buffer: Buffer, count: number) {
   }
 
   const nombre = text.match(/PACIENTE\s*:\s*(.+)/i)?.[1]?.trim() || "";
-  const rut = text.match(/\d{1,2}\.\d{3}\.\d{3}-\d/i)?.[0] || "";
+  const rut = text.match(/\d{1,2}\.\d{3}\.\d{3}-[\dkK]/i)?.[0] || "";
   const sexo = text.match(/\b(FEMENINO|MASCULINO)\b/i)?.[1] || "";
   const edad = text.match(/(\d+)\s*años/i)?.[1] || "";
 
@@ -292,7 +292,6 @@ export const POST = async (req: Request) => {
       nullGetter: () => "",
     });
 
-    // Flatten all parsed exams from all files
     const parsedExams = (await Promise.all(
       files.map(async (file, index) => {
         const buffer = Buffer.from(await file.arrayBuffer());
@@ -334,25 +333,20 @@ export const POST = async (req: Request) => {
     let normalCounter = 0;
     let cultivosCounter = 0;
 
+    const skipKeys = ["rut", "nombre", "edad", "sexo"];
+
+    function mapExamWithIndex(exam: Record<string, any>, index: number, shouldSkipKeys: boolean = true) {
+      return Object.fromEntries(
+        Object.entries(exam)
+          .filter(([k]) => !shouldSkipKeys || !skipKeys.includes(k.toLowerCase()))
+          .map(([k, v]) => [`${k}_${index}`, v])
+      );
+    }
+
     const placeholdersArray = [
-      ...orinaExams.map((exam) => {
-        const index = ++orinaCounter;
-        return Object.fromEntries(
-          Object.entries(exam).map(([k, v]) => [`${k}_${index}`, v])
-        );
-      }),
-      ...cultivosExams.map((exam) => {
-        const index = ++cultivosCounter;
-        return Object.fromEntries(
-          Object.entries(exam).map(([k, v]) => [`${k}_${index}`, v])
-        );
-      }),
-      ...normalExams.map((exam) => {
-        const index = ++normalCounter;
-        return Object.fromEntries(
-          Object.entries(exam).map(([k, v]) => [`${k}_${index}`, v])
-        );
-      }),
+      ...orinaExams.map((exam) => mapExamWithIndex(exam, ++orinaCounter)),
+      ...cultivosExams.map((exam) => mapExamWithIndex(exam, ++cultivosCounter)),
+      ...normalExams.map((exam) => mapExamWithIndex(exam, ++normalCounter, normalCounter > 1)),
     ];
 
     // Merge placeholders into one object for docxtemplater
