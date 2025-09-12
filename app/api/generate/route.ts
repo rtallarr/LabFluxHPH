@@ -79,7 +79,7 @@ async function parseLabPdf(buffer: Buffer, count: number) {
   }
 
   const nombre = text.match(/PACIENTE\s*:\s*(.+)/i)?.[1]?.trim() || "";
-  const rut = text.match(/IDENTIFICACION\s*:\s*(.+)/i)?.[1]?.trim() || "";
+  const rut = text.match(/\d{1,2}\.\d{3}\.\d{3}-\d/i)?.[0] || "";
   const sexo = text.match(/\b(FEMENINO|MASCULINO)\b/i)?.[1] || "";
   const edad = text.match(/(\d+)\s*años/i)?.[1] || "";
 
