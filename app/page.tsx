@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { FaGithub } from "react-icons/fa";
+import { FaGithub, FaRegFileAlt , FaUpload } from "react-icons/fa";
 import Image from "next/image";
 
 export default function HomePage() {
@@ -15,7 +15,7 @@ export default function HomePage() {
   const addFiles = (newFiles: FileList | null) => {
     if (!newFiles) return;
     const valid = Array.from(newFiles).filter(
-      (f) => /\.pdf$/i.test(f.name) || /\.zip$/i.test(f.name)
+      (f) => /\.pdf$/i.test(f.name)
     );
 
     if (files.length + valid.length > 24) {
@@ -105,7 +105,7 @@ export default function HomePage() {
           id="fileInput"
           type="file"
           multiple
-          accept=".pdf,.zip"
+          accept=".pdf"
           className="hidden"
           onChange={(e) => {
             addFiles(e.target.files);
@@ -125,18 +125,21 @@ export default function HomePage() {
             addFiles(e.dataTransfer.files);
           }}
         >
-          <div className="text-blue-400 text-5xl mb-4">📄</div>
+          <div className="flex justify-center items-center text-blue-400 text-5xl mb-4">
+            <FaRegFileAlt  />
+          </div>
           <div className="text-gray-600 font-semibold">
             Arrastra archivos aquí o haz clic para seleccionarlos
           </div>
           <button
             type="button"
-            className="mt-4 inline-flex items-center px-4 py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+            className="mt-4 inline-flex items-center px-4 py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition gap-2"
             onClick={(e) => {
               e.stopPropagation();
               fileInputRef.current?.click();
             }}
           >
+            <FaUpload />
             Seleccionar archivos
           </button>
         </div>
@@ -200,6 +203,9 @@ export default function HomePage() {
       <footer className="bg-gray-200 text-gray-700 py-4 mt-8 text-center mt-auto">
         <p>Comentarios, sugerencias y problemas dejarlos en <a href="https://github.com/rtallarr/LabFluxHPH/issues" className="underline hover:text-purple-600">github</a></p>
         <p>&copy; {new Date().getFullYear()} <a href="https://www.tallar.cl" className="hover:text-purple-600">Rodrigo Tallar</a></p>
+        <p className="text-xs text-gray-600">
+          ⚠️ LabFluxHPH se proporciona tal cual y no se hace responsables de errores, omisiones u otros problemas derivados de su uso.
+        </p>
       </footer>
 
     </div>
