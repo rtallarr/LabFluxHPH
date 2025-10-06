@@ -23,7 +23,6 @@ function exportData(data: string, filename: string) {
   //console.log(`Data exported to ${exportPath}`);
 }
 
-//problema con le fecha hace que se sobreescriban los archivos
 function pdfExportData(data: string, nombre: string, fecha: string, hora: string) {
   const filename = nombre.split(" ")[0] + fecha.replace(/\//g, "-") + "_" + hora.replace(/:/g, "_");
   const exportDir = path.join(process.cwd(), "assets", "pdf_data");
@@ -36,7 +35,6 @@ function pdfExportData(data: string, nombre: string, fecha: string, hora: string
 }
 
 function splitExams(text: string): { type: string; content: string }[] {
-  // Step 1: Split by each RECEPCIÓN section
   const sections = text.split(/(?=RECEPCI[OÓ]N\s*:)/g);
 
   const exams: { type: string; content: string }[] = [];
@@ -228,7 +226,25 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const tropo = text.match(/([\d.,]+)\s*\[.*?\]\s*ng\/L\s*TROPONINA T ULTRASENSIBLE/i)?.[1] || "";
       const vitb = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]pg\/mLNIVELES VITAMINA B12/i)?.[1] || "";
 
+      //FIERRO
+      const fierro = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]μg\/dLFIERRO/i)?.[1] || "";
+      const tibc = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]μg\/dLTIBC/i)?.[1] || "";
+      const uibc = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]μg\/dLUIBC/i)?.[1] || "";
+      const satFe = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]%%?\s*SATURACIÓN DE TRANSFERRINA/i)?.[1] || "";
+
+      //INMUNOLOGICO
+      const fReum = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]UI\/mLFACTOR REUMATOIDEO/i)?.[1] || "";
+      const IGA = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLINMUNOGLOBULINA A/i)?.[1] || "";
+      const IGG = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLINMUNOGLOBULINA G/i)?.[1] || "";
+      const IGM = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLINMUNOGLOBULINA M/i)?.[1] || "";
+      const IGE = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]UI\/mLIGE TOTAL/i)?.[1] || "";
+      const C3 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLCOMPLEMENTO C3/i)?.[1] || "";
+      const C4 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLCOMPLEMENTO C4/i)?.[1] || "";
+      const acCCP = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*U\/mL\s*ANTICUERPO ANTI P[ÉE]PTIDO\s*CITRULINADO \(CCP\)/i)?.[1] || "";
+
+      // ENDOCRINOLOGICO
       const tsh = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]μUI\/mLHORMONA TIROESTIMULANTE \(TSH\)/i)?.[1] || "";
+      const t4l = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*ng\/dL\s*TETRAIDOTIRONINA LIBRE\s*\(T4L\)/i)?.[1] || "";
 
       // VFGE
       const creaNum = parseFloat(crea);
@@ -267,7 +283,10 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
         tp, inr, ttpk,
         glucosa, coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq, tropo, vfg,
         calcio, calcioion, gpt, got, ggt, fa, bd, bt, lactico, ck, ckmb, ldh, amilasa, proteinas, acurico, vitb,
-        ph, pcodos, podos, bicarb, base, satO2
+        ph, pcodos, podos, bicarb, base, satO2,
+        fReum, IGG, IGA, IGM, IGE, C3, C4, acCCP,
+        tsh, t4l,
+        fierro, tibc, uibc, satFe,
       };
     }
   });
@@ -286,7 +305,7 @@ export const POST = async (req: Request) => {
     }
 
     // Load DOCX template
-    const templatePath = path.join(process.cwd(), "assets", "template_norm.docx");
+    const templatePath = path.join(process.cwd(), "assets", "new_template.docx");
     const content = fs.readFileSync(templatePath, "binary");
     const zip = new PizZip(content);
     const doc = new Docxtemplater(zip, {
