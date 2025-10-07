@@ -226,6 +226,9 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const tropo = text.match(/([\d.,]+)\s*\[.*?\]\s*ng\/L\s*TROPONINA T ULTRASENSIBLE/i)?.[1] || "";
       const vitb = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]pg\/mLNIVELES VITAMINA B12/i)?.[1] || "";
 
+      //MARCADORES
+      const procal = exam.content.match(/([\d.,]+)\s*ng\/mL\s*PROCALCITONINA/i)?.[1] || "";
+
       //FIERRO
       const fierro = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]μg\/dLFIERRO/i)?.[1] || "";
       const tibc = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]μg\/dLTIBC/i)?.[1] || "";
@@ -233,6 +236,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const satFe = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]%%?\s*SATURACIÓN DE TRANSFERRINA/i)?.[1] || "";
 
       //INMUNOLOGICO
+      const fetoprot = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+\s*-\s*[\d.,]+\s*\]\s*UI\/mL\s*ALFAFETOPROTEÍNA/i)?.[1] || "";
       const fReum = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]UI\/mLFACTOR REUMATOIDEO/i)?.[1] || "";
       const IGA = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLINMUNOGLOBULINA A/i)?.[1] || "";
       const IGG = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLINMUNOGLOBULINA G/i)?.[1] || "";
@@ -241,10 +245,17 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const C3 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLCOMPLEMENTO C3/i)?.[1] || "";
       const C4 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLCOMPLEMENTO C4/i)?.[1] || "";
       const acCCP = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*U\/mL\s*ANTICUERPO ANTI P[ÉE]PTIDO\s*CITRULINADO \(CCP\)/i)?.[1] || "";
+      const acTPO = exam.content.match(/([\d.,]+)\s*\[\s*<?[\d.,]+\s*\]\s*UI\/mL\s*ANTICUERPOS ANTI-PEROXIDASA/i)?.[1] || "";
+      const aso = exam.content.match(/([\d.,]+)\s*UI\/mL\s*ANTICUERPOS ANTI ESTREPTOLISINA O\s*\(ASO\)/i)?.[1] || "";
+      const ca125 = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,\s–-]+\s*\]\s*U\/mL\s*ANTÍGENO CA-125/i)?.[1] || "";
 
       // ENDOCRINOLOGICO
-      const tsh = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]μUI\/mLHORMONA TIROESTIMULANTE \(TSH\)/i)?.[1] || "";
+      const hcg = exam.content.match(/(<?[\d.,]+)\s*(?=\[)\s*mUI\/mL\s*GONADOTROFINA CORIÓNICA/i)?.[1] || "";
+      const antiTG = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+\s*-\s*[\d.,]+\s*\]\s*UI\/mL\s*ANTI-TIROGLOBULINA\s*\(ANTI-TG\)/i)?.[1] || "";
+      const PTH = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+\s*-\s*[\d.,]+\s*\]\s*pg\/mL\s*HORMONA PARATIROIDEA INTACTA/i)?.[1] || "";
       const t4l = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*ng\/dL\s*TETRAIDOTIRONINA LIBRE\s*\(T4L\)/i)?.[1] || "";
+      const tsh = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]μUI\/mLHORMONA TIROESTIMULANTE \(TSH\)/i)?.[1] || "";
+      const cortisol = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+-[\d.,]+\s*\]\s*μg\/dL\s*CORTISOL AM/i)?.[1] || "";
 
       // VFGE
       const creaNum = parseFloat(crea);
@@ -282,10 +293,10 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
         sodio, potasio, cloro, 
         tp, inr, ttpk,
         glucosa, coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq, tropo, vfg,
-        calcio, calcioion, gpt, got, ggt, fa, bd, bt, lactico, ck, ckmb, ldh, amilasa, proteinas, acurico, vitb,
+        calcio, calcioion, gpt, got, ggt, fa, bd, bt, lactico, ck, ckmb, ldh, amilasa, proteinas, acurico, vitb, procal,
         ph, pcodos, podos, bicarb, base, satO2,
-        fReum, IGG, IGA, IGM, IGE, C3, C4, acCCP,
-        tsh, t4l,
+        fReum, IGG, IGA, IGM, IGE, C3, C4, acCCP, acTPO, ca125, aso, fetoprot,
+        tsh, t4l, cortisol, PTH, antiTG, hcg,
         fierro, tibc, uibc, satFe,
       };
     }
