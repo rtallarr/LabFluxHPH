@@ -165,8 +165,10 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const vcm = exam.content.match(/([\d.,]+)\s*fL\s*VCM/i)?.[1] || "";
       const hcm = exam.content.match(/([\d.,]+)\s*pg\s*HCM/i)?.[1] || "";
       const chcm = exam.content.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
+      const plaqMatch = exam.content.match(/([\d.]+)\s*miles\/uL\s*RCTO DE PLAQUETAS/i)?.[1] || "";
+      const plaq = plaqMatch ? (parseFloat(plaqMatch) * 1000).toString() : "";
 
-      // CELULAS
+      // HEMATOLÓGICO - CELULAS
       const leucoMatch = exam.content.match(/([\d.]+)\s*(miles\/uL|millón\/uL)?\s*R?CTO DE LEUCOCITOS/i);
       const leuco = leucoMatch ? parseFloat(leucoMatch[1]) * 1000 : null;
 
@@ -182,80 +184,91 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const eosin = leuco && eosinPercent ? Math.round((parseFloat(eosinPercent) / 100) * leuco).toString() : "";
       const basofilos = leuco && basoPercent ? Math.round((parseFloat(basoPercent) / 100) * leuco).toString() : "";
 
-      // COAGULACION
-      const tp = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]%PORCENTAJE/i)?.[1] || "";
-      const inr = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]INR/i)?.[1] || "";
-      const ttpk = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]segTTPA/i)?.[1] || "";
-
-      // ELECTROLITOS
-      const sodio = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*SODIO/i)?.[1] || "";
-      const potasio = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*POTASIO/i)?.[1] || "";
-      const cloro = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*CLORO/i)?.[1] || "";
-
-      // BIOQUÍMICA
-      const glucosa = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*GLUCOSA/i)?.[1] || "";
-      const coltotal = exam.content.match(/([\d.,]+)\s*\[Ideal/i)?.[1] || "";
-      const hdl = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*COLESTEROL HDL/i)?.[1] || "";
-      const tgl = exam.content.match(/([\d.,]+)\s*\[.*?\]mg\/dLTRIGLICÉRIDOS/i)?.[1] || "";
-      const ldl = coltotal && hdl && tgl && parseFloat(tgl) < 400 ? Math.round(parseFloat(coltotal) - parseFloat(hdl) - parseFloat(tgl)/5).toString() : "";
-      const crea = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*CREATININA/i)?.[1] || "";
-      const bun = exam.content.match(/([\d.,]+)\[[^\]]+\]mg\/dL\s*BUN/i)?.[1] || "";
-      const fosforo = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*FÓSFORO/i)?.[1] || "";
-      const magnesio = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*MAGNESIO/i)?.[1] || "";
-      const calcio = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*CALCIO/i)?.[1] || "";
-      const calcioion = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mmol\/LCALCIO IONICO/i)?.[1] || "";
-      const acurico = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLÁCIDO ÚRICO/i)?.[1] || "";
-      const gpt = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*GPT/i)?.[1] || "";
-      const got = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*GOT/i)?.[1] || "";
-      const ggt = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U[I]?\/L\s*GGT/i)?.[1] || "";
-      const fa = text.match(/(\d+(?:[.,]\d+)?)\s*\[[^\]]+\]\s*U\/L\s*FOSFATASA ALCALINA/i)?.[1] || "";
-      const bd = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*BILIRRUBINA DIRECTA/i)?.[1] || "";
-      const bt = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*BILIRRUBINA TOTAL/i)?.[1] || "";
-      const amilasa = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]U\/LAMILASA/i)?.[1] || "";
-      const proteinas = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]g\/dLPROTEÍNAS TOTALES/i)?.[1] || "";
-      const pcr = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/L\s*PROTEÍNA C REACTIVA/i)?.[1] || "";
-      const lactico = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mmol\/L\s*ÁCIDO LÁCTICO/i)?.[1] || "";
-      const ldh = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*LDH/i)?.[1] || "";
-      const ck = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]U\/LCREATINKINASA TOTAL/i)?.[1] || "";
-      const ckmb = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*CREATINKINASA MB/i)?.[1] || "";
-      const glicada = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*%?\s*HEMOGLOBINA GLICOSILADA/i)?.[1] || "";
-      const buncrea = bun && crea ? Math.round(parseFloat(bun) / parseFloat(crea)) : "";
-      const albumina = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*g\/dL\s*ALBÚMINA/i)?.[1] || "";
-      const plaqMatch = exam.content.match(/([\d.]+)\s*miles\/uL\s*RCTO DE PLAQUETAS/i)?.[1] || "";
-      const plaq = plaqMatch ? (parseFloat(plaqMatch) * 1000).toString() : "";
-      const tropo = text.match(/([\d.,]+)\s*\[.*?\]\s*ng\/L\s*TROPONINA T ULTRASENSIBLE/i)?.[1] || "";
-      const vitb = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]pg\/mLNIVELES VITAMINA B12/i)?.[1] || "";
-
-      //MARCADORES
-      const procal = exam.content.match(/([\d.,]+)\s*ng\/mL\s*PROCALCITONINA/i)?.[1] || "";
-
       //FIERRO
       const fierro = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]μg\/dLFIERRO/i)?.[1] || "";
       const tibc = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]μg\/dLTIBC/i)?.[1] || "";
       const uibc = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]μg\/dLUIBC/i)?.[1] || "";
       const satFe = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]%%?\s*SATURACIÓN DE TRANSFERRINA/i)?.[1] || "";
 
+      //MARCADORES
+      const pcr = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/L\s*PROTEÍNA C REACTIVA/i)?.[1] || "";
+      const lactico = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mmol\/L\s*ÁCIDO LÁCTICO/i)?.[1] || "";
+      const ldh = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*LDH/i)?.[1] || "";
+      const tropo = text.match(/([\d.,]+)\s*\[.*?\]\s*ng\/L\s*TROPONINA T ULTRASENSIBLE/i)?.[1] || "";
+      const ck = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]U\/LCREATINKINASA TOTAL/i)?.[1] || "";
+      const ckmb = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*CREATINKINASA MB/i)?.[1] || "";
+      const procal = exam.content.match(/([\d.,]+)\s*ng\/mL\s*PROCALCITONINA/i)?.[1] || "";
+
+      //RENAL
+      const bun = exam.content.match(/([\d.,]+)\[[^\]]+\]mg\/dL\s*BUN/i)?.[1] || "";
+      const crea = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*CREATININA/i)?.[1] || "";
+      const buncrea = bun && crea ? Math.round(parseFloat(bun) / parseFloat(crea)) : "";
+      const acurico = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLÁCIDO ÚRICO/i)?.[1] || "";
+
+      // ELECTROLITOS
+      const sodio = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*SODIO/i)?.[1] || "";
+      const potasio = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*POTASIO/i)?.[1] || "";
+      const cloro = exam.content.match(/([\d.,]+)\[[^\]]+\]mEq\/L\s*CLORO/i)?.[1] || "";
+      const calcio = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*CALCIO/i)?.[1] || "";
+      const calcioion = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mmol\/LCALCIO IONICO/i)?.[1] || "";
+      const fosforo = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*FÓSFORO/i)?.[1] || "";
+      const magnesio = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*MAGNESIO/i)?.[1] || "";
+
+      // GASES ARTERIALES
+      const ph = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*PH/i)?.[1] || "";
+      const pcodos = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*P\s*CO2/i)?.[1] || "";
+      const podos = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*P\s*O2/i)?.[1] || "";
+      const bicarb = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*HCO3/i)?.[1] || "";
+      const tco2 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*T\s*CO2/i)?.[1] || "";
+      const base = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*EBVT/i)?.[1] || ""; //esta como BE en el flujograma
+      const satO2 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]%?\s*SATURACION\s*DE\s*O2/i)?.[1] || "";
+
+      //HEPÁTICO
+      const proteinas = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]g\/dLPROTEÍNAS TOTALES/i)?.[1] || "";
+      const albumina = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*g\/dL\s*ALBÚMINA/i)?.[1] || "";
+      const bd = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*BILIRRUBINA DIRECTA/i)?.[1] || "";
+      const bt = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mg\/dL\s*BILIRRUBINA TOTAL/i)?.[1] || "";
+      const got = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*GOT/i)?.[1] || "";
+      const gpt = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*GPT/i)?.[1] || "";
+      const ggt = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U[I]?\/L\s*GGT/i)?.[1] || "";
+      const fa = text.match(/(\d+(?:[.,]\d+)?)\s*\[[^\]]+\]\s*U\/L\s*FOSFATASA ALCALINA/i)?.[1] || "";
+      const amilasa = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]U\/LAMILASA/i)?.[1] || "";
+
+      //METABOLICO / NUTRICIONAL
+      const glucosa = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*GLUCOSA/i)?.[1] || "";
+      const glicada = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]\s*%?\s*HEMOGLOBINA GLICOSILADA/i)?.[1] || "";
+      const coltotal = exam.content.match(/([\d.,]+)\s*\[Ideal/i)?.[1] || "";
+      const hdl = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*COLESTEROL HDL/i)?.[1] || "";
+      const tgl = exam.content.match(/([\d.,]+)\s*\[.*?\]mg\/dLTRIGLICÉRIDOS/i)?.[1] || "";
+      const ldl = coltotal && hdl && tgl && parseFloat(tgl) < 400 ? Math.round(parseFloat(coltotal) - parseFloat(hdl) - parseFloat(tgl)/5).toString() : "";
+      const vitb = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]pg\/mLNIVELES VITAMINA B12/i)?.[1] || "";
+
+      // COAGULACION
+      const tp = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]%PORCENTAJE/i)?.[1] || "";
+      const inr = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]INR/i)?.[1] || "";
+      const ttpk = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]segTTPA/i)?.[1] || "";
+
       //INMUNOLOGICO
       const fetoprot = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+\s*-\s*[\d.,]+\s*\]\s*UI\/mL\s*ALFAFETOPROTEÍNA/i)?.[1] || "";
+      const acCCP = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*U\/mL\s*ANTICUERPO ANTI P[ÉE]PTIDO\s*CITRULINADO \(CCP\)/i)?.[1] || "";
+      const acTPO = exam.content.match(/([\d.,]+)\s*\[\s*<?[\d.,]+\s*\]\s*UI\/mL\s*ANTICUERPOS ANTI-PEROXIDASA/i)?.[1] || "";
+      const aso = exam.content.match(/([\d.,]+)\s*UI\/mL\s*ANTICUERPOS ANTI ESTREPTOLISINA O\s*\(ASO\)/i)?.[1] || "";
+      const ca125 = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,\s–-]+\s*\]\s*U\/mL\s*ANTÍGENO CA-125/i)?.[1] || "";
+      const C3 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLCOMPLEMENTO C3/i)?.[1] || "";
+      const C4 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLCOMPLEMENTO C4/i)?.[1] || "";
       const fReum = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]UI\/mLFACTOR REUMATOIDEO/i)?.[1] || "";
       const IGA = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLINMUNOGLOBULINA A/i)?.[1] || "";
       const IGG = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLINMUNOGLOBULINA G/i)?.[1] || "";
       const IGM = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLINMUNOGLOBULINA M/i)?.[1] || "";
       const IGE = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]UI\/mLIGE TOTAL/i)?.[1] || "";
-      const C3 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLCOMPLEMENTO C3/i)?.[1] || "";
-      const C4 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLCOMPLEMENTO C4/i)?.[1] || "";
-      const acCCP = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*U\/mL\s*ANTICUERPO ANTI P[ÉE]PTIDO\s*CITRULINADO \(CCP\)/i)?.[1] || "";
-      const acTPO = exam.content.match(/([\d.,]+)\s*\[\s*<?[\d.,]+\s*\]\s*UI\/mL\s*ANTICUERPOS ANTI-PEROXIDASA/i)?.[1] || "";
-      const aso = exam.content.match(/([\d.,]+)\s*UI\/mL\s*ANTICUERPOS ANTI ESTREPTOLISINA O\s*\(ASO\)/i)?.[1] || "";
-      const ca125 = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,\s–-]+\s*\]\s*U\/mL\s*ANTÍGENO CA-125/i)?.[1] || "";
 
       // ENDOCRINOLOGICO
-      const hcg = exam.content.match(/(<?[\d.,]+)\s*(?=\[)\s*mUI\/mL\s*GONADOTROFINA CORIÓNICA/i)?.[1] || "";
       const antiTG = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+\s*-\s*[\d.,]+\s*\]\s*UI\/mL\s*ANTI-TIROGLOBULINA\s*\(ANTI-TG\)/i)?.[1] || "";
+      const hcg = exam.content.match(/(<?[\d.,]+)\s*(?=\[)\s*mUI\/mL\s*GONADOTROFINA CORIÓNICA/i)?.[1] || "";
+      const cortisol = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+-[\d.,]+\s*\]\s*μg\/dL\s*CORTISOL AM/i)?.[1] || "";
       const PTH = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+\s*-\s*[\d.,]+\s*\]\s*pg\/mL\s*HORMONA PARATIROIDEA INTACTA/i)?.[1] || "";
       const t4l = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*ng\/dL\s*TETRAIDOTIRONINA LIBRE\s*\(T4L\)/i)?.[1] || "";
       const tsh = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]μUI\/mLHORMONA TIROESTIMULANTE \(TSH\)/i)?.[1] || "";
-      const cortisol = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+-[\d.,]+\s*\]\s*μg\/dL\s*CORTISOL AM/i)?.[1] || "";
 
       // VFGE
       const creaNum = parseFloat(crea);
@@ -277,27 +290,20 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
         }
       }
 
-      // GASES ARTERIALES
-      const ph = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*PH/i)?.[1] || "";
-      const pcodos = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*P\s*CO2/i)?.[1] || "";
-      const podos = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*P\s*O2/i)?.[1] || "";
-      const bicarb = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*HCO3/i)?.[1] || "";
-      const tco2 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*T\s*CO2/i)?.[1] || "";
-      const base = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*EBVT/i)?.[1] || ""; //esta como BE en el flujograma
-      const satO2 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]%?\s*SATURACION\s*DE\s*O2/i)?.[1] || "";
-
       return {
         type: exam.type,
         nombre, rut, edad, sexo, fecha, hora,
-        hto, hb, vcm, leuco, eritro, hcm, chcm, neu, linfocitos, mono, eosin, basofilos,
-        sodio, potasio, cloro, 
-        tp, inr, ttpk,
-        glucosa, coltotal, hdl, tgl, ldl, crea, bun, fosforo, magnesio, pcr, glicada, buncrea, albumina, plaq, tropo, vfg,
-        calcio, calcioion, gpt, got, ggt, fa, bd, bt, lactico, ck, ckmb, ldh, amilasa, proteinas, acurico, vitb, procal,
-        ph, pcodos, podos, bicarb, base, satO2,
-        fReum, IGG, IGA, IGM, IGE, C3, C4, acCCP, acTPO, ca125, aso, fetoprot,
-        tsh, t4l, cortisol, PTH, antiTG, hcg,
+        hto, hb, vcm, hcm, plaq, leuco, neu, linfocitos, mono, eosin, basofilos,
         fierro, tibc, uibc, satFe,
+        pcr, lactico, ldh, tropo, ck, ckmb, procal,
+        bun, crea, buncrea, acurico,
+        sodio, potasio, cloro, calcio, calcioion, fosforo, magnesio,
+        ph, pcodos, podos, bicarb, tco2, base,
+        proteinas, albumina, bd, bt, got, gpt, ggt, fa, amilasa,
+        glucosa, glicada, coltotal, hdl, tgl, ldl, vitb,
+        tp, inr, ttpk,
+        fetoprot, acCCP, acTPO, aso, ca125, C3, C4, fReum, IGG, IGA, IGM, IGE, 
+        antiTG, hcg, cortisol, PTH, t4l, tsh,
       };
     }
   });
