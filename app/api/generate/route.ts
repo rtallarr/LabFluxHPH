@@ -167,6 +167,8 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const chcm = exam.content.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
       const plaqMatch = exam.content.match(/([\d.]+)\s*miles\/uL\s*RCTO DE PLAQUETAS/i)?.[1] || "";
       const plaq = plaqMatch ? (parseFloat(plaqMatch) * 1000).toString() : "";
+      const vhs = exam.content.match(/([\d.,]+)\s*(?=\[)\s*mm\/hrs\s*VHS/i)?.[1] || "";
+
 
       // HEMATOLÓGICO - CELULAS
       const leucoMatch = exam.content.match(/([\d.]+)\s*(miles\/uL|millón\/uL)?\s*R?CTO DE LEUCOCITOS/i);
@@ -242,6 +244,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const tgl = exam.content.match(/([\d.,]+)\s*\[.*?\]mg\/dLTRIGLICÉRIDOS/i)?.[1] || "";
       const ldl = coltotal && hdl && tgl && parseFloat(tgl) < 400 ? Math.round(parseFloat(coltotal) - parseFloat(hdl) - parseFloat(tgl)/5).toString() : "";
       const vitb = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]pg\/mLNIVELES VITAMINA B12/i)?.[1] || "";
+      const vitD = exam.content.match(/([\d.,]+)\s*(?=\[)\s*ng\/mL\s*NIVELES VITAMINA D/i)?.[1] || "";
 
       // COAGULACION
       const tp = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]%PORCENTAJE/i)?.[1] || "";
@@ -266,7 +269,14 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const antiTG = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+\s*-\s*[\d.,]+\s*\]\s*UI\/mL\s*ANTI-TIROGLOBULINA\s*\(ANTI-TG\)/i)?.[1] || "";
       const hcg = exam.content.match(/(<?[\d.,]+)\s*(?=\[)\s*mUI\/mL\s*GONADOTROFINA CORIÓNICA/i)?.[1] || "";
       const cortisol = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+-[\d.,]+\s*\]\s*μg\/dL\s*CORTISOL AM/i)?.[1] || "";
+      const insulina = exam.content.match(/([\d.,]+)\s*(?=\[)\s*μUI\/mL\s*INSULINA BASAL/i)?.[1] || "";
+      const estradiol = exam.content.match(/([\d.,]+)\s*pg\/mL\s*ESTRADIOL/i)?.[1] || "";
+      const FSH = exam.content.match(/(<?[\d.,]+)\s*(?=\[)[\s\S]*?mIU\/mL\s*FSH/i)?.[1] || "";
+      const LH = exam.content.match(/(<?[\d.,]+)\s*(?=\[)[\s\S]*?mUI\/mL\s*HORMONA LUTEINIZANTE\s*\(LH\)/i)?.[1] || "";
       const PTH = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+\s*-\s*[\d.,]+\s*\]\s*pg\/mL\s*HORMONA PARATIROIDEA INTACTA/i)?.[1] || "";
+      const testo = exam.content.match(/([\d.,]+)\s*(?=\[)\s*ng\/mL\s*TESTOSTERONA/i)?.[1] || "";
+      const T3 = exam.content.match(/([\d.,]+)\s*(?=\[)\s*ng\/mL\s*TRIIODOTIRONINA\s*\(T3\)/i)?.[1] || "";
+      const T4 = exam.content.match(/([\d.,]+)\s*(?=\[)\s*μg\/dL\s*TETRAIODOTIRONINA\s*\(T4\)/i)?.[1] || "";
       const t4l = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*ng\/dL\s*TETRAIDOTIRONINA LIBRE\s*\(T4L\)/i)?.[1] || "";
       const tsh = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]μUI\/mLHORMONA TIROESTIMULANTE \(TSH\)/i)?.[1] || "";
 
@@ -293,17 +303,17 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       return {
         type: exam.type,
         nombre, rut, edad, sexo, fecha, hora,
-        hto, hb, vcm, hcm, plaq, leuco, neu, linfocitos, mono, eosin, basofilos, eritro,
+        hto, hb, vcm, hcm, plaq, vhs, leuco, neu, linfocitos, mono, eosin, basofilos, eritro,
         fierro, tibc, uibc, satFe,
         pcr, lactico, ldh, tropo, ck, ckmb, procal,
         bun, crea, buncrea, vfg, acurico,
         sodio, potasio, cloro, calcio, calcioion, fosforo, magnesio,
         ph, pcodos, podos, bicarb, tco2, base,
         proteinas, albumina, bd, bt, got, gpt, ggt, fa, amilasa,
-        glucosa, glicada, coltotal, hdl, tgl, ldl, vitb,
+        glucosa, glicada, coltotal, hdl, tgl, ldl, vitb, vitD,
         tp, inr, ttpk,
         fetoprot, acCCP, acTPO, aso, ca125, C3, C4, fReum, IGG, IGA, IGM, IGE, 
-        antiTG, hcg, cortisol, PTH, t4l, tsh,
+        antiTG, hcg, cortisol, insulina, estradiol, FSH, LH, PTH, testo, T3, T4, t4l, tsh,
       };
     }
   });
