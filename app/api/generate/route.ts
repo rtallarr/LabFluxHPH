@@ -235,7 +235,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const ggt = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U[I]?\/L\s*GGT/i)?.[1] || "";
       const fa = text.match(/(\d+(?:[.,]\d+)?)\s*\[[^\]]+\]\s*U\/L\s*FOSFATASA ALCALINA/i)?.[1] || "";
       const amilasa = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]U\/LAMILASA/i)?.[1] || "";
-      const amonio = exam.content.match(/([\d.,]+)\s*(?=\[)\s*μmol\/L\s*AMONIO/i)?.[1] || "";
+      const amonio = exam.content.match(/([\d.,]+)\s*\[.*\]\s*.mol\/L\s*AMONIO/i)?.[1] || "";
 
       //METABOLICO / NUTRICIONAL
       const glucosa = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*GLUCOSA/i)?.[1] || "";
