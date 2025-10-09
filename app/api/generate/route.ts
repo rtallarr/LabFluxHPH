@@ -268,7 +268,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
 
       // ENDOCRINOLOGICO
       const antiTG = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+\s*-\s*[\d.,]+\s*\]\s*UI\/mL\s*ANTI-TIROGLOBULINA\s*\(ANTI-TG\)/i)?.[1] || "";
-      const tiroglob = exam.content.match(/([\d.,]+)\s*(?=\[)\s*ng\/mL\s*TIROGLOBULINA/i)?.[1] || "";
+      const tiroglob = exam.content.match(/([\d.,]+)\s*\[.*\]\s*ng\/mL\s*TIROGLOBULINA/i)?.[1] || "";
       const hcg = exam.content.match(/(<?[\d.,]+)\s*(?=\[)\s*mUI\/mL\s*GONADOTROFINA CORIÓNICA/i)?.[1] || "";
       const cortisol = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+-[\d.,]+\s*\]\s*μg\/dL\s*CORTISOL AM/i)?.[1] || "";
       const insulina = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*.UI\/mL\s*INSULINA BASAL/i)?.[1] || "";
