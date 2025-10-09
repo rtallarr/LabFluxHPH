@@ -199,6 +199,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const tropo = text.match(/([\d.,]+)\s*\[.*?\]\s*ng\/L\s*TROPONINA T ULTRASENSIBLE/i)?.[1] || "";
       const ck = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]U\/LCREATINKINASA TOTAL/i)?.[1] || "";
       const ckmb = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*CREATINKINASA MB/i)?.[1] || "";
+      const dimd = exam.content.match(/([\d.,]+)\s*(?=\[)\s*ng\/mL\s*DIMERO D/i)?.[1] || "";
       const procal = exam.content.match(/([\d.,]+)\s*ng\/mL\s*PROCALCITONINA/i)?.[1] || "";
 
       //RENAL
@@ -235,6 +236,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const ggt = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U[I]?\/L\s*GGT/i)?.[1] || "";
       const fa = text.match(/(\d+(?:[.,]\d+)?)\s*\[[^\]]+\]\s*U\/L\s*FOSFATASA ALCALINA/i)?.[1] || "";
       const amilasa = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]U\/LAMILASA/i)?.[1] || "";
+      const amonio = exam.content.match(/([\d.,]+)\s*(?=\[)\s*μmol\/L\s*AMONIO/i)?.[1] || "";
 
       //METABOLICO / NUTRICIONAL
       const glucosa = text.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*GLUCOSA/i)?.[1] || "";
@@ -310,7 +312,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
         bun, crea, buncrea, vfg, acurico,
         sodio, potasio, cloro, calcio, calcioion, fosforo, magnesio,
         ph, pcodos, podos, bicarb, tco2, base,
-        proteinas, albumina, bd, bt, got, gpt, ggt, fa, amilasa,
+        proteinas, albumina, bd, bt, got, gpt, ggt, fa, amilasa, amonio,
         glucosa, glicada, coltotal, hdl, tgl, ldl, vitb, vitD,
         tp, inr, ttpk,
         fetoprot, acCCP, acTPO, aso, ca125, C3, C4, fReum, IGG, IGA, IGM, IGE, 
