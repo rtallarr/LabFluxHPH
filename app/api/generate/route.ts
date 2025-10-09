@@ -167,8 +167,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const chcm = exam.content.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
       const plaqMatch = exam.content.match(/([\d.]+)\s*miles\/uL\s*RCTO DE PLAQUETAS/i)?.[1] || "";
       const plaq = plaqMatch ? (parseFloat(plaqMatch) * 1000).toString() : "";
-      const vhs = exam.content.match(/([\d.,]+)\s*(?=\[)\s*mm\/hrs\s*VHS/i)?.[1] || "";
-
+      const vhs = exam.content.match(/([\d.,]+)\s*\[.*\]\s*mm\/hrs\s*VHS/i)?.[1] || "";
 
       // HEMATOLÓGICO - CELULAS
       const leucoMatch = exam.content.match(/([\d.]+)\s*(miles\/uL|millón\/uL)?\s*R?CTO DE LEUCOCITOS/i);
@@ -272,7 +271,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const tiroglob = exam.content.match(/([\d.,]+)\s*(?=\[)\s*ng\/mL\s*TIROGLOBULINA/i)?.[1] || "";
       const hcg = exam.content.match(/(<?[\d.,]+)\s*(?=\[)\s*mUI\/mL\s*GONADOTROFINA CORIÓNICA/i)?.[1] || "";
       const cortisol = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+-[\d.,]+\s*\]\s*μg\/dL\s*CORTISOL AM/i)?.[1] || "";
-      const insulina = exam.content.match(/([\d.,]+)\s*(?=\[)\s*μUI\/mL\s*INSULINA BASAL/i)?.[1] || "";
+      const insulina = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*.UI\/mL\s*INSULINA BASAL/i)?.[1] || "";
       const estradiol = exam.content.match(/([\d.,]+)\s*pg\/mL\s*ESTRADIOL/i)?.[1] || "";
       const FSH = exam.content.match(/(<?[\d.,]+)\s*(?=\[)[\s\S]*?mIU\/mL\s*FSH/i)?.[1] || "";
       const LH = exam.content.match(/(<?[\d.,]+)\s*(?=\[)[\s\S]*?mUI\/mL\s*HORMONA LUTEINIZANTE\s*\(LH\)/i)?.[1] || "";
