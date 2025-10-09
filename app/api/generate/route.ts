@@ -293,10 +293,10 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       return {
         type: exam.type,
         nombre, rut, edad, sexo, fecha, hora,
-        hto, hb, vcm, hcm, plaq, leuco, neu, linfocitos, mono, eosin, basofilos,
+        hto, hb, vcm, hcm, plaq, leuco, neu, linfocitos, mono, eosin, basofilos, eritro,
         fierro, tibc, uibc, satFe,
         pcr, lactico, ldh, tropo, ck, ckmb, procal,
-        bun, crea, buncrea, acurico,
+        bun, crea, buncrea, vfg, acurico,
         sodio, potasio, cloro, calcio, calcioion, fosforo, magnesio,
         ph, pcodos, podos, bicarb, tco2, base,
         proteinas, albumina, bd, bt, got, gpt, ggt, fa, amilasa,
