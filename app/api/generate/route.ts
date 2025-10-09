@@ -161,7 +161,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       // PERFIL HEMATOLÓGICO
       const hto = exam.content.match(/([\d.,]+)\s*%?\s*HEMATOCRITO/i)?.[1] || "";
       const hb = exam.content.match(/([\d.,]+)\s*g\/dL\s*HEMOGLOBINA/i)?.[1] || "";
-      const eritro = exam.content.match(/([\d.,]+)\s*mill[oó]n\/uL\s*RCTO DE ERITROCITOS/i)?.[1] || "";
+      const eritro = exam.content.match(/([\d.,]+)\s*mill[oó]n\/uL\s*RCTO DE ERITROCITOS/i)?.[1] || ""; //agregar al flujo
       const vcm = exam.content.match(/([\d.,]+)\s*fL\s*VCM/i)?.[1] || "";
       const hcm = exam.content.match(/([\d.,]+)\s*pg\s*HCM/i)?.[1] || "";
       const chcm = exam.content.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
@@ -322,7 +322,7 @@ export const POST = async (req: Request) => {
     }
 
     // Load DOCX template
-    const templatePath = path.join(process.cwd(), "assets", "new_template.docx");
+    const templatePath = path.join(process.cwd(), "assets", "template.docx");
     const content = fs.readFileSync(templatePath, "binary");
     const zip = new PizZip(content);
     const doc = new Docxtemplater(zip, {
