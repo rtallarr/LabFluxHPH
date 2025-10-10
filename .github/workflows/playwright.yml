@@ -34,8 +34,22 @@ jobs:
           npx wait-on http://localhost:3000
         # wait-on waits until the server is ready
 
-      - name: Run Playwright test (uploadPdf.spec.ts)
-        run: npx playwright test e2e/uploadPdf.spec.ts
+      - name: Decrypt sample PDFs
+        run: |
+          mkdir -p e2e/fixtures
+          for f in e2e/fixtures/*.pdf.gpg; do
+            out="${f%.gpg}"
+            gpg --batch --yes --passphrase "$PDF_SECRET_KEY" -o "$out" -d "$f"
+          done
+        env:
+          PDF_SECRET_KEY: ${{ secrets.PDF_SECRET_KEY }}
+      
+      - name: Write expected JSON fixtures
+        run: |
+          echo '${{ secrets.RTR1_EXPECTED_JSON }}' > e2e/fixtures/RTR1.expected.json
+
+      - name: Run Playwright test
+        run: npx playwright test
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
