@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 const FIXTURES_DIR = path.resolve("e2e/fixtures");
-const BACKEND_URL = "http://localhost:3000/api/generate?debug=json";
+const BACKEND_URL = "http://localhost:3000/api/generate?json=true";
 
 async function bootstrap() {
   const files = fs.readdirSync(FIXTURES_DIR).filter(f => f.endsWith(".pdf"));

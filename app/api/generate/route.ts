@@ -367,10 +367,11 @@ export const POST = async (req: Request) => {
 
     if (process.env.NODE_ENV === "development") {
       exportData(JSON.stringify(parsedExams, null, 2), "parsed_exams");
-      const url = new URL(req.url);
-      if (url.searchParams.get('debug') === 'json') {
-        return new NextResponse(JSON.stringify(parsedExams, null, 2), { status: 200 });
-      }
+    }
+
+    const url = new URL(req.url);
+    if (url.searchParams.get('json') === 'true') {
+      return new NextResponse(JSON.stringify(parsedExams, null, 2), { status: 200 });
     }
 
     // Separate ORINA vs CULTIVOS vs general exams

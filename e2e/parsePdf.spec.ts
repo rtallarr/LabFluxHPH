@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 const FIXTURES_DIR = path.resolve(__dirname, "fixtures");
-const BACKEND_URL = "http://localhost:3000/api/generate?debug=json";
+const BACKEND_URL = "http://localhost:3000/api/generate?json=true";
 
 test.describe("PDF Parsing", () => {
   const pdfFiles = fs.readdirSync(FIXTURES_DIR).filter((f) => f.endsWith(".pdf"));
