@@ -38,7 +38,7 @@ export default function HomePage() {
 
   const handleGenerate = async () => {
     if (!files.length) {
-      setStatus("⚠ Selecciona al menos un archivo (PDF o ZIP).");
+      setStatus("⚠ Selecciona al menos un archivo.");
       return;
     }
 
