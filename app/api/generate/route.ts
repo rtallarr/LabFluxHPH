@@ -136,7 +136,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       return {
         type: exam.type,
         nombre, rut, edad, sexo, fechaoc, horaoc,
-        coloroc, aspectooc, densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc,
+        densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc,
         globRojos, mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
       };
 
