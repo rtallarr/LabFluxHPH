@@ -331,7 +331,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
         antiTG, tiroglob, hcg, cortisol, insulina, estradiol, FSH, LH, PTH, testo, T3, T4, t4l, tsh,
       };
 
-      return cleanExam(fields);;
+      return cleanExam(fields);
     }
   });
 
