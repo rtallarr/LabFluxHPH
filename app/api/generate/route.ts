@@ -68,6 +68,19 @@ function splitExams(text: string): { type: string; content: string }[] {
   return exams;
 }
 
+function cleanExam<T extends { type: string; rut: string; nombre: string; edad: string; sexo: string }>(exam: T): T {
+  const requiredKeys = ["type", "rut", "nombre", "edad", "sexo"];
+  return Object.fromEntries(
+    Object.entries(exam)
+      .filter(([key, value]) => {
+        // always keep required keys
+        if (requiredKeys.includes(key)) return true;
+        // keep optional keys only if not empty
+        return value !== "" && value !== null && value !== undefined;
+      })
+  ) as T;
+}
+
 async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
   const data = await pdf(buffer);
   const text = data.text;
@@ -123,7 +136,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       return {
         type: exam.type,
         nombre, rut, edad, sexo, fechaoc, horaoc,
-        coloroc, aspectooc, densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc,
+        densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc,
         globRojos, mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
       };
 
@@ -302,7 +315,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
         }
       }
 
-      return {
+      const fields = {
         type: exam.type,
         nombre, rut, edad, sexo, fecha, hora,
         hto, hb, vcm, hcm, plaq, vhs, leuco, neu, linfocitos, mono, eosin, basofilos, eritro,
@@ -317,6 +330,8 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
         fetoprot, acCCP, acTPO, aso, ca125, C3, C4, fReum, IGG, IGA, IGM, IGE, 
         antiTG, tiroglob, hcg, cortisol, insulina, estradiol, FSH, LH, PTH, testo, T3, T4, t4l, tsh,
       };
+
+      return cleanExam(fields);;
     }
   });
 
@@ -352,6 +367,11 @@ export const POST = async (req: Request) => {
 
     if (process.env.NODE_ENV === "development") {
       exportData(JSON.stringify(parsedExams, null, 2), "parsed_exams");
+    }
+
+    const url = new URL(req.url);
+    if (url.searchParams.get('json') === 'true') {
+      return new NextResponse(JSON.stringify(parsedExams, null, 2), { status: 200 });
     }
 
     // Separate ORINA vs CULTIVOS vs general exams

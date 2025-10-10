@@ -43,3 +43,15 @@ next-env.d.ts
 # Generated files
 /assets/parsed_data/
 /assets/pdf_data/
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+samples.txt
+/e2e/fixtures/*.pdf
+/e2e/fixtures/*.json
