@@ -48,6 +48,7 @@ jobs:
         run: |
           echo '${{ secrets.SAMPLE1_EXPECTED_JSON }}' > e2e/fixtures/sample1.expected.json
           echo '${{ secrets.SAMPLE2_EXPECTED_JSON }}' > e2e/fixtures/sample2.expected.json
+          echo '${{ secrets.SAMPLE2_EXPECTED_JSON }}' > e2e/fixtures/sample3.expected.json
 
       - name: Run Playwright test
         run: npx playwright test
