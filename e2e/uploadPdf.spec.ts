@@ -5,7 +5,7 @@ test('should generate flujograma', async ({ page }) => {
   await page.goto('http://localhost:3000/');
 
   // Upload a sample PDF
-  const filePath = path.resolve(__dirname, 'fixtures/sample1.pdf');
+  const filePath = path.resolve(__dirname, 'fixtures/RTR1.pdf');
   const uploadInput = page.locator('input[type="file"]');
   await uploadInput.setInputFiles(filePath);
 

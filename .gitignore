@@ -53,4 +53,5 @@ node_modules/
 /playwright/.auth/
 
 samples.txt
-/e2e/fixtures/
+/e2e/fixtures/*.pdf
+/e2e/fixtures/*.json
