@@ -11,7 +11,7 @@ function safeExpectMatch(actual: Exam, expected: Exam) {
   try {
     expect(actual).toMatchObject(expected);
   } catch {
-    throw new Error("JSON did not match (details hidden for privacy)");
+    throw new Error("JSON did not match");
   }
 }
 
