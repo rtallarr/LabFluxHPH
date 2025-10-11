@@ -258,7 +258,8 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const tgl = exam.content.match(/([\d.,]+)\s*\[.*?\]mg\/dLTRIGLICÉRIDOS/i)?.[1] || "";
       const ldl = coltotal && hdl && tgl && parseFloat(tgl) < 400 ? Math.round(parseFloat(coltotal) - parseFloat(hdl) - parseFloat(tgl)/5).toString() : "";
       const vitb = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]pg\/mLNIVELES VITAMINA B12/i)?.[1] || "";
-      const vitD = exam.content.match(/([\d.,]+)\s*(?=\[)\s*ng\/mL\s*NIVELES VITAMINA D/i)?.[1] || "";
+      const vitD = exam.content.match(/([\d.,]+)\s*\[.*\]\s*ng\/mL\s*NIVELES VITAMINA D/i)?.[1] || "";
+      //28[30 - 50]ng/mLNIVELES VITAMINA D
 
       // COAGULACION
       const tp = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]%PORCENTAJE/i)?.[1] || "";
