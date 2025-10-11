@@ -43,15 +43,10 @@ jobs:
           PDF_SECRET_KEY: ${{ secrets.PDF_SECRET_KEY }}
 
       - name: Write expected JSON fixtures
-        shell: bash
         run: |
-          printf '%s' "${SAMPLE1_JSON}" > e2e/fixtures/sample1.json
-          printf '%s' "${SAMPLE2_JSON}" > e2e/fixtures/sample2.json
-          printf '%s' "${SAMPLE3_JSON}" > e2e/fixtures/sample3.json
-        env:
-          SAMPLE1_JSON: ${{ secrets.SAMPLE1_JSON }}
-          SAMPLE2_JSON: ${{ secrets.SAMPLE2_JSON }}
-          SAMPLE3_JSON: ${{ secrets.SAMPLE3_JSON }}
+          echo '${{ secrets.SAMPLE1_EXPECTED_JSON }}' > e2e/fixtures/sample1.expected.json
+          echo '${{ secrets.SAMPLE2_EXPECTED_JSON }}' > e2e/fixtures/sample2.expected.json
+          echo '${{ secrets.SAMPLE2_EXPECTED_JSON }}' > e2e/fixtures/sample3.expected.json
 
       - name: Run Playwright test
         run: npx playwright test
