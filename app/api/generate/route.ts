@@ -259,7 +259,6 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const ldl = coltotal && hdl && tgl && parseFloat(tgl) < 400 ? Math.round(parseFloat(coltotal) - parseFloat(hdl) - parseFloat(tgl)/5).toString() : "";
       const vitb = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]pg\/mLNIVELES VITAMINA B12/i)?.[1] || "";
       const vitD = exam.content.match(/([\d.,]+)\s*\[.*\]\s*ng\/mL\s*NIVELES VITAMINA D/i)?.[1] || "";
-      //28[30 - 50]ng/mLNIVELES VITAMINA D
 
       // COAGULACION
       const tp = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]%PORCENTAJE/i)?.[1] || "";
@@ -287,8 +286,8 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const cortisol = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+-[\d.,]+\s*\]\s*μg\/dL\s*CORTISOL AM/i)?.[1] || "";
       const insulina = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*.UI\/mL\s*INSULINA BASAL/i)?.[1] || "";
       const estradiol = exam.content.match(/([\d.,]+)\s*pg\/mL\s*ESTRADIOL/i)?.[1] || "";
-      const FSH = exam.content.match(/(<?[\d.,]+)\s*(?=\[)[\s\S]*?mIU\/mL\s*FSH/i)?.[1] || "";
-      const LH = exam.content.match(/(<?[\d.,]+)\s*(?=\[)[\s\S]*?mUI\/mL\s*HORMONA LUTEINIZANTE\s*\(LH\)/i)?.[1] || "";
+      const FSH = exam.content.match(/([\d.,]+)\[Fase\s*Folicular\s*:\s*3\.5\s*[–-]\s*12\.5+/ui)?.[1] || "";
+      const LH  = exam.content.match(/([\d.,]+)\[Fase\s*Folicular\s*:\s*2\.40\s*[–-]\s*12\.6+/ui)?.[1] || "";
       const PTH = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+\s*-\s*[\d.,]+\s*\]\s*pg\/mL\s*HORMONA PARATIROIDEA INTACTA/i)?.[1] || "";
       const testo = exam.content.match(/([\d.,]+)\s*\[.*\]\s*ng\/mL\s*TESTOSTERONA/i)?.[1] || "";
       const T3 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*.g\/mL\s*TRIIODOTIRONINA\s*\(T3\)/i)?.[1] || "";
