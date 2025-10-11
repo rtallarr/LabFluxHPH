@@ -52,6 +52,9 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 
-samples.txt
+# E2E fixtures
 /e2e/fixtures/*.pdf
 /e2e/fixtures/*.json
+
+# Other
+notas.md
