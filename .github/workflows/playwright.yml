@@ -41,12 +41,6 @@ jobs:
           done
         env:
           PDF_SECRET_KEY: ${{ secrets.PDF_SECRET_KEY }}
-      
-      - name: Write expected JSON fixtures
-        run: |
-          echo '${{ secrets.SAMPLE1_EXPECTED_JSON }}' > e2e/fixtures/sample1.expected.json
-          echo '${{ secrets.SAMPLE2_EXPECTED_JSON }}' > e2e/fixtures/sample2.expected.json
-          echo '${{ secrets.SAMPLE2_EXPECTED_JSON }}' > e2e/fixtures/sample3.expected.json
 
       - name: Write expected JSON fixtures
         shell: bash
