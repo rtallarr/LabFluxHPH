@@ -27,12 +27,10 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      # Start Next.js server in background
       - name: Start Next.js server
         run: |
           npm run start &
           npx wait-on http://localhost:3000
-        # wait-on waits until the server is ready
 
       - name: Decrypt sample PDFs
         run: |
@@ -50,12 +48,16 @@ jobs:
           echo '${{ secrets.SAMPLE2_EXPECTED_JSON }}' > e2e/fixtures/sample2.expected.json
           echo '${{ secrets.SAMPLE2_EXPECTED_JSON }}' > e2e/fixtures/sample3.expected.json
 
+      - name: Write expected JSON fixtures
+        shell: bash
+        run: |
+          printf '%s' "${SAMPLE1_JSON}" > e2e/fixtures/sample1.json
+          printf '%s' "${SAMPLE2_JSON}" > e2e/fixtures/sample2.json
+          printf '%s' "${SAMPLE3_JSON}" > e2e/fixtures/sample3.json
+        env:
+          SAMPLE1_JSON: ${{ secrets.SAMPLE1_JSON }}
+          SAMPLE2_JSON: ${{ secrets.SAMPLE2_JSON }}
+          SAMPLE3_JSON: ${{ secrets.SAMPLE3_JSON }}
+
       - name: Run Playwright test
         run: npx playwright test
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
