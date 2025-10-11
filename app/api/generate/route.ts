@@ -112,8 +112,8 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       }
 
       // ORINA
-      const coloroc = exam.content.match(/COLOR\s*([A-Za-z]+)/i)?.[1] || "";
-      const aspectooc = exam.content.match(/ASPECTO([A-Za-z]+)Transparente/i)?.[1] || "";
+      //const coloroc = exam.content.match(/COLOR\s*([A-Za-z]+)/i)?.[1] || "";
+      //const aspectooc = exam.content.match(/ASPECTO([A-Za-z]+)Transparente/i)?.[1] || "";
       const densoc = exam.content.match(/(\d+\.\d+)\s*1\.005\s*-\s*1\.025/i)?.[1] || "";
       const phoc = exam.content.match(/pH([\d.,]+)5\.0 - 7\.0/i)?.[1] || "";
       const nitritosoc = exam.content.match(/NITRITOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
@@ -123,7 +123,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const urobiloc = exam.content.match(/UROBILINÓGENO\s*([A-Za-z0-9]+)Normal/i)?.[1] || "";
       const bilioc = exam.content.match(/BILIRRUBINA\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
       const mucusoc = exam.content.match(/MUCUS\s*(.*)/i)?.[1] || "";
-      const globRojos = exam.content.match(/GLOBULOS ROJOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
+      //const globRojos = exam.content.match(/GLOBULOS ROJOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
       const leucosoc = exam.content.match(/LEUCOCITOS\s*(.*)\s*0\s*-\s*4/i)?.[1] || "";
       const groc = exam.content.match(/ERITROCITOS\s*(.*)\s*0\s*-\s*4/i)?.[1] || "";
       const bactoc = exam.content.match(/BACTERIAS\s*(.*)No se/i)?.[1] || "";
@@ -137,7 +137,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
         type: exam.type,
         nombre, rut, edad, sexo, fechaoc, horaoc,
         densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc,
-        globRojos, mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
+        mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
       };
 
     } else if (exam.type.includes("CULTIVOS")) {
@@ -177,7 +177,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const eritro = exam.content.match(/([\d.,]+)\s*mill[oó]n\/uL\s*RCTO DE ERITROCITOS/i)?.[1] || ""; //agregar al flujo
       const vcm = exam.content.match(/([\d.,]+)\s*fL\s*VCM/i)?.[1] || "";
       const hcm = exam.content.match(/([\d.,]+)\s*pg\s*HCM/i)?.[1] || "";
-      const chcm = exam.content.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
+      //const chcm = exam.content.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
       const plaqMatch = exam.content.match(/([\d.]+)\s*miles\/uL\s*RCTO DE PLAQUETAS/i)?.[1] || "";
       const plaq = plaqMatch ? (parseFloat(plaqMatch) * 1000).toString() : "";
       const vhs = exam.content.match(/([\d.,]+)\s*\[.*\]\s*mm\/hrs\s*VHS/i)?.[1] || "";
@@ -236,7 +236,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const bicarb = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*HCO3/i)?.[1] || "";
       const tco2 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mm\/Hg\s*T\s*CO2/i)?.[1] || "";
       const base = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*mmol\/L\s*EBVT/i)?.[1] || ""; //esta como BE en el flujograma
-      const satO2 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]%?\s*SATURACION\s*DE\s*O2/i)?.[1] || "";
+      //const satO2 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]%?\s*SATURACION\s*DE\s*O2/i)?.[1] || "";
 
       //HEPÁTICO
       const proteinas = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]g\/dLPROTEÍNAS TOTALES/i)?.[1] || "";
@@ -320,7 +320,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
         nombre, rut, edad, sexo, fecha, hora,
         hto, hb, vcm, hcm, plaq, vhs, leuco, neu, linfocitos, mono, eosin, basofilos, eritro,
         fierro, tibc, uibc, satFe,
-        pcr, lactico, ldh, tropo, ck, ckmb, procal,
+        pcr, lactico, ldh, tropo, ck, ckmb, dimd, procal,
         bun, crea, buncrea, vfg, acurico,
         sodio, potasio, cloro, calcio, calcioion, fosforo, magnesio,
         ph, pcodos, podos, bicarb, tco2, base,
