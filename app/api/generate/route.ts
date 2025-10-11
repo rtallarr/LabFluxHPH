@@ -174,16 +174,16 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       // PERFIL HEMATOLÓGICO
       const hto = exam.content.match(/([\d.,]+)\s*%?\s*HEMATOCRITO/i)?.[1] || "";
       const hb = exam.content.match(/([\d.,]+)\s*g\/dL\s*HEMOGLOBINA/i)?.[1] || "";
-      const eritro = exam.content.match(/([\d.,]+)\s*mill[oó]n\/uL\s*RCTO DE ERITROCITOS/i)?.[1] || ""; //agregar al flujo
+      const eritro = exam.content.match(/([\d.,]+)\s*mill[oó]n\/uL\s*RCTO\.?\s*DE ERITROCITOS/i)?.[1] || "";
       const vcm = exam.content.match(/([\d.,]+)\s*fL\s*VCM/i)?.[1] || "";
       const hcm = exam.content.match(/([\d.,]+)\s*pg\s*HCM/i)?.[1] || "";
       //const chcm = exam.content.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
-      const plaqMatch = exam.content.match(/([\d.]+)\s*miles\/uL\s*RCTO DE PLAQUETAS/i)?.[1] || "";
-      const plaq = plaqMatch ? (parseFloat(plaqMatch) * 1000).toString() : "";
+      const plaqMatch = exam.content.match(/([\d.]+)\s*miles\/uL\s*RCTO\.?\s*DE PLAQUETAS/i)?.[1] || "";
+      const plaq = plaqMatch ? parseFloat(plaqMatch) * 1000 : null;
       const vhs = exam.content.match(/([\d.,]+)\s*\[.*\]\s*mm\/hrs\s*VHS/i)?.[1] || "";
 
       // HEMATOLÓGICO - CELULAS
-      const leucoMatch = exam.content.match(/([\d.]+)\s*(miles\/uL|mill[óo]n\/uL)?\s*RCTO\.? DE LEUCOCITOS/i);
+      const leucoMatch = exam.content.match(/([\d.]+)\s*(miles\/uL|mill[óo]n\/uL)?\s*RCTO\.?\s*DE LEUCOCITOS/i);
       const leuco = leucoMatch ? parseFloat(leucoMatch[1]) * 1000 : null;
 
       const neuPercent = exam.content.match(/([\d.,]+)%\s*NEUTR[ÓO]FILOS/i)?.[1];
