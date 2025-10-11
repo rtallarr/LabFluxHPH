@@ -183,7 +183,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const vhs = exam.content.match(/([\d.,]+)\s*\[.*\]\s*mm\/hrs\s*VHS/i)?.[1] || "";
 
       // HEMATOLÓGICO - CELULAS
-      const leucoMatch = exam.content.match(/([\d.]+)\s*(miles\/uL|millón\/uL)?\s*R?CTO DE LEUCOCITOS/i);
+      const leucoMatch = exam.content.match(/([\d.]+)\s*(miles\/uL|mill[óo]n\/uL)?\s*RCTO\.? DE LEUCOCITOS/i);
       const leuco = leucoMatch ? parseFloat(leucoMatch[1]) * 1000 : null;
 
       const neuPercent = exam.content.match(/([\d.,]+)%\s*NEUTR[ÓO]FILOS/i)?.[1];
