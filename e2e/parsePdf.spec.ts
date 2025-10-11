@@ -2,8 +2,18 @@ import { test, expect } from "@playwright/test";
 import fs from "fs";
 import path from "path";
 
+import { Exam } from "@/app/types/exam";
+
 const FIXTURES_DIR = path.resolve(__dirname, "fixtures");
 const BACKEND_URL = "http://localhost:3000/api/generate?json=true";
+
+function safeExpectMatch(actual: Exam, expected: Exam) {
+  try {
+    expect(actual).toMatchObject(expected);
+  } catch {
+    throw new Error("JSON did not match (details hidden for privacy)");
+  }
+}
 
 test.describe("PDF Parsing", () => {
   const pdfFiles = fs.readdirSync(FIXTURES_DIR).filter((f) => f.endsWith(".pdf"));
@@ -33,9 +43,13 @@ test.describe("PDF Parsing", () => {
         throw new Error(`Missing expected JSON for ${pdfFile} → ${expectedPath}`);
       }
 
-      const expected = JSON.parse(fs.readFileSync(expectedPath, "utf8"));
+      const expected: Exam = JSON.parse(fs.readFileSync(expectedPath, "utf8"));
 
-      expect(json).toMatchObject(expected);
+      if (process.env.CI == "true") {
+        safeExpectMatch(json, expected);
+      } else {
+        expect(json).toMatchObject(expected);
+      }
     });
   }
 });

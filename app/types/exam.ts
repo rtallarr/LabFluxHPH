@@ -4,7 +4,6 @@ export type OrinaExam = {
   nombre: string;
   edad: string;
   sexo: string;
-  color: string;
   ph: number;
   densidad: number;
   [key: string]: string | number | undefined;
