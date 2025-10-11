@@ -123,7 +123,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const urobiloc = exam.content.match(/UROBILINÓGENO\s*([A-Za-z0-9]+)Normal/i)?.[1] || "";
       const bilioc = exam.content.match(/BILIRRUBINA\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
       const mucusoc = exam.content.match(/MUCUS\s*(.*)/i)?.[1] || "";
-      //const globRojos = exam.content.match(/GLOBULOS ROJOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
+      const globRojos = exam.content.match(/GLOBULOS ROJOS\s*([A-Za-z0-9]+)Negativo/i)?.[1] || "";
       const leucosoc = exam.content.match(/LEUCOCITOS\s*(.*)\s*0\s*-\s*4/i)?.[1] || "";
       const groc = exam.content.match(/ERITROCITOS\s*(.*)\s*0\s*-\s*4/i)?.[1] || "";
       const bactoc = exam.content.match(/BACTERIAS\s*(.*)No se/i)?.[1] || "";
@@ -137,7 +137,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
         type: exam.type,
         nombre, rut, edad, sexo, fechaoc, horaoc,
         densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc,
-        mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
+        globRojos, mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
       };
 
     } else if (exam.type.includes("CULTIVOS")) {

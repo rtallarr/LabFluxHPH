@@ -60,4 +60,4 @@ jobs:
           SAMPLE3_JSON: ${{ secrets.SAMPLE3_JSON }}
 
       - name: Run Playwright test
-        run: npx playwright test --reporter=dot
+        run: npx playwright test
