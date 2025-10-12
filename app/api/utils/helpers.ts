@@ -18,6 +18,9 @@ export function cleanExam<T extends { type: string; rut: string; nombre: string;
 }
 
 export function calculateVFG(crea: number, edad: number, sexo: string): string {
+
+	if (!crea || !edad || !sexo) return "";
+	
 	let vfg = "";
 	if (sexo == "FEMENINO" ) {
 		if (crea <= 0.7) {
