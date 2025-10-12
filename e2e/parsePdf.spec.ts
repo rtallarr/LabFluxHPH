@@ -3,6 +3,8 @@ import fs from "fs";
 import path from "path";
 import { Exam } from "@/app/types/exam";
 
+import { Exam } from "@/app/types/exam";
+
 const FIXTURES_DIR = path.resolve(__dirname, "fixtures");
 const BACKEND_URL = "http://localhost:3000/api/generate?json=true";
 
