@@ -3,12 +3,11 @@
 import { useState, useRef } from "react";
 import { FaGithub, FaRegFileAlt , FaUpload } from "react-icons/fa";
 import { CiWarning } from "react-icons/ci";
+import { toast, Toaster } from "sonner";
 import Image from "next/image";
 
 export default function HomePage() {
   const [files, setFiles] = useState<File[]>([]);
-  const [status, setStatus] = useState("");
-  const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -19,8 +18,8 @@ export default function HomePage() {
       (f) => /\.pdf$/i.test(f.name)
     );
 
-    if (files.length + valid.length > 24) {
-      setStatus("⚠ El numero máximo de archivos a subir es 24.");
+    if (files.length + valid.length > 16) {
+      toast.warning("El numero máximo de archivos a subir es 16.");
       return;
     }
 
@@ -33,19 +32,15 @@ export default function HomePage() {
 
   const clearAll = () => {
     setFiles([]);
-    setStatus("");
-    setProgress(0);
   };
 
   const handleGenerate = async () => {
     if (!files.length) {
-      setStatus("⚠ Selecciona al menos un archivo.");
+      toast.warning("Selecciona al menos un archivo.");
       return;
     }
 
     setLoading(true);
-    setStatus("");
-    setProgress(0);
 
     const formData = new FormData();
     files.forEach((f) => formData.append("files", f));
@@ -67,18 +62,16 @@ export default function HomePage() {
       a.click();
       URL.revokeObjectURL(url);
 
-      setStatus("✅ Flujograma generado. Revisa tu descarga.");
+      toast.success("Flujograma generado. Revisa tu descarga.");
     } catch {
-      setStatus("❌ Error al generar el flujograma.");
+      toast.error("Error al generar el flujograma.");
     } finally {
       setLoading(false);
-      setProgress(100);
-      setTimeout(() => setProgress(0), 800);
     }
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen flex flex-col">
+    <main className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header */}
       <header className="bg-blue-900 text-white py-4 flex items-center justify-center gap-6">
         <Image src="/gatosaludando.gif" alt="" width={64} height={64} unoptimized />
@@ -152,7 +145,7 @@ export default function HomePage() {
               key={idx}
               className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
             >
-              {file.name} · {(file.size / 1024).toFixed(1)} KB
+              {file.name} · {(file.size / 1024).toFixed(0)} KB
               <button
                 onClick={() => removeFile(idx)}
                 className="ml-1 text-red-600 hover:text-red-800"
@@ -163,23 +156,9 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Status + Progress */}
         <div className="mt-6 text-center space-y-3">
           {loading && (
             <Image src="/loading.gif" alt="Cargando..." width={32} height={32} unoptimized />
-          )}
-          <div className="text-gray-700 min-h-6">{status}</div>
-
-          {progress > 0 && (
-            <div className="w-full">
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                <div
-                  className="bg-blue-600 h-3 transition-all duration-150"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-              <div className="text-sm text-gray-600 mt-1">{progress}%</div>
-            </div>
           )}
 
           {/* Buttons */}
@@ -208,7 +187,8 @@ export default function HomePage() {
           <CiWarning /> LabFluxHPH se proporciona tal cual y no se hace responsables de errores, omisiones u otros problemas derivados de su uso.
         </p>
       </footer>
-
-    </div>
+    
+    <Toaster position="top-right" richColors />
+    </main>
   );
 }

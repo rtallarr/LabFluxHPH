@@ -13,10 +13,10 @@ test('should generate flujograma', async ({ page }) => {
   const generateBtn = page.locator('button', { hasText: 'Generar flujograma' });
   await generateBtn.click();
 
-  const statusMessageOk = page.locator('div', { hasText: '✅ Flujograma generado' }).first();
+  const statusMessageOk = page.getByRole('listitem').getByText('Flujograma generado. Revisa tu descarga.');
   await expect(statusMessageOk).toBeVisible();
 
-  const statusMessageMissing = page.locator('div', { hasText: '⚠ Selecciona al menos un archivo.' }).first();
+  const statusMessageMissing = page.getByRole('listitem').getByText('selecciona al menos un archivo');
   await expect(statusMessageMissing).not.toBeVisible();
 });
 
@@ -27,9 +27,9 @@ test('should handle submit with no files uploaded', async ({ page }) => {
   const generateBtn = page.locator('button', { hasText: 'Generar flujograma' });
   await generateBtn.click();
 
-  const statusMessageMissing = page.locator('div', { hasText: '⚠ Selecciona al menos un archivo.' }).first();
+  const statusMessageMissing = page.getByRole('listitem').getByText('selecciona al menos un archivo');
   await expect(statusMessageMissing).toBeVisible();
 
-  const statusMessageOk = page.locator('div', { hasText: '✅ Flujograma generado' }).first();
+  const statusMessageOk = page.getByRole('listitem').getByText('Flujograma generado. Revisa tu descarga.');
   await expect(statusMessageOk).not.toBeVisible();
 });
