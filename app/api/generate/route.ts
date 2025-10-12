@@ -286,8 +286,8 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const cortisol = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+-[\d.,]+\s*\]\s*μg\/dL\s*CORTISOL AM/i)?.[1] || "";
       const insulina = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*.UI\/mL\s*INSULINA BASAL/i)?.[1] || "";
       const estradiol = exam.content.match(/([\d.,]+)\s*pg\/mL\s*ESTRADIOL/i)?.[1] || "";
-      const FSH = exam.content.match(/([\d.,]+)\[Fase\s*Folicular\s*:\s*3\.5\s*[–-]\s*12\.5+/ui)?.[1] || "";
-      const LH  = exam.content.match(/([\d.,]+)\[Fase\s*Folicular\s*:\s*2\.40\s*[–-]\s*12\.6+/ui)?.[1] || "";
+      const FSH = exam.content.match(/([\d.,]+)\[Fase\s*Folicular\s*:\s*3\.5\s*[–-]\s*12\.5/ui)?.[1] || "";
+      const LH  = exam.content.match(/([\d.,]+)\[Fase\s*Folicular\s*:\s*2\.40\s*[–-]\s*12\.6/ui)?.[1] || "";
       const PTH = exam.content.match(/([\d.,]+)\s*\[\s*[\d.,]+\s*-\s*[\d.,]+\s*\]\s*pg\/mL\s*HORMONA PARATIROIDEA INTACTA/i)?.[1] || "";
       const testo = exam.content.match(/([\d.,]+)\s*\[.*\]\s*ng\/mL\s*TESTOSTERONA/i)?.[1] || "";
       const T3 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*.g\/mL\s*TRIIODOTIRONINA\s*\(T3\)/i)?.[1] || "";
