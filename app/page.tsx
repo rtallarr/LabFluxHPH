@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { FaGithub, FaRegFileAlt , FaUpload } from "react-icons/fa";
+import { CiWarning } from "react-icons/ci";
 import Image from "next/image";
 
 export default function HomePage() {
@@ -204,7 +205,7 @@ export default function HomePage() {
         <p>Comentarios, sugerencias y problemas dejarlos en <a href="https://github.com/rtallarr/LabFluxHPH/issues" className="underline hover:text-purple-600">github</a></p>
         <p>&copy; {new Date().getFullYear()} <a href="https://www.tallar.cl" className="hover:text-purple-600">Rodrigo Tallar</a></p>
         <p className="text-xs text-gray-600">
-          ⚠️ LabFluxHPH se proporciona tal cual y no se hace responsables de errores, omisiones u otros problemas derivados de su uso.
+          <CiWarning /> LabFluxHPH se proporciona tal cual y no se hace responsables de errores, omisiones u otros problemas derivados de su uso.
         </p>
       </footer>
 
