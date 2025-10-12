@@ -171,7 +171,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const lactico = text.match(/([\d.,]+)\s*\[[^\]]+\]\s*mmol\/L\s*ÁCIDO LÁCTICO/i)?.[1] || "";
       const ldh = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*LDH/i)?.[1] || "";
       const tropo = text.match(/([\d.,]+)\s*\[.*?\]\s*ng\/L\s*TROPONINA T ULTRASENSIBLE/i)?.[1] || "";
-      const ck = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]U\/LCREATINKINASA TOTAL/i)?.[1] || "";
+      const ck = exam.content.match(/^([\d.,<]+)\s*\[\s*([^\]]*)\]\s*U\/L\s*(CREATINKINASA TOTAL)/mi)?.[1] || "";      
       const ckmb = text.match(/(\d+(?:[.,]\d+)?)\s*\[.*?\]\s*U\/L\s*CREATINKINASA MB/i)?.[1] || "";
       const dimd = exam.content.match(/([\d.,]+)\s*(?=\[)\s*ng\/mL\s*DIMERO D/i)?.[1] || "";
       const procal = exam.content.match(/([\d.,]+)\s*ng\/mL\s*PROCALCITONINA/i)?.[1] || "";
