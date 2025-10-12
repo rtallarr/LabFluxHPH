@@ -6,33 +6,8 @@ import Docxtemplater from "docxtemplater";
 import pdf from "pdf-parse";
 
 import { Exam } from "@/app/types/exam";
-
-function parseFechaHora(fecha: string, hora: string): Date {
-  const [day, month, year] = fecha.split("/").map(Number);
-  const [hours, minutes] = hora.split(":").map(Number);
-  return new Date(year, month - 1, day, hours, minutes);
-}
-
-function exportData(data: string, filename: string) {
-  const exportDir = path.join(process.cwd(), "assets", "parsed_data");
-
-  if (!fs.existsSync(exportDir)) fs.mkdirSync(exportDir, { recursive: true });
-
-  const exportPath = path.join(process.cwd(), "assets", "parsed_data", filename+".json");
-  fs.writeFileSync(exportPath, data);
-  //console.log(`Data exported to ${exportPath}`);
-}
-
-function pdfExportData(data: string, nombre: string, fecha: string, hora: string) {
-  const filename = nombre.split(" ")[0] + fecha.replace(/\//g, "-") + "_" + hora.replace(/:/g, "_");
-  const exportDir = path.join(process.cwd(), "assets", "pdf_data");
-
-  if (!fs.existsSync(exportDir)) fs.mkdirSync(exportDir, { recursive: true });
-
-  const exportPath = path.join(process.cwd(), "assets", "pdf_data", filename+".txt");
-  fs.writeFileSync(exportPath, data);
-  //console.log(`Data exported to ${exportPath}`);
-}
+import { parseFechaHora, cleanExam, calculateVFG } from "@/app/api/utils/helpers";
+import { exportData, pdfExportData } from "@/app/api/utils/logger";
 
 function splitExams(text: string): { type: string; content: string }[] {
   const sections = text.split(/(?=RECEPCI[OÓ]N\s*:)/g);
@@ -66,19 +41,6 @@ function splitExams(text: string): { type: string; content: string }[] {
 
   }
   return exams;
-}
-
-function cleanExam<T extends { type: string; rut: string; nombre: string; edad: string; sexo: string }>(exam: T): T {
-  const requiredKeys = ["type", "rut", "nombre", "edad", "sexo"];
-  return Object.fromEntries(
-    Object.entries(exam)
-      .filter(([key, value]) => {
-        // always keep required keys
-        if (requiredKeys.includes(key)) return true;
-        // keep optional keys only if not empty
-        return value !== "" && value !== null && value !== undefined;
-      })
-  ) as T;
 }
 
 async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
@@ -218,6 +180,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const bun = exam.content.match(/([\d.,]+)\[[^\]]+\]mg\/dL\s*BUN/i)?.[1] || "";
       const crea = exam.content.match(/([\d.,]+)\s*\[.*?\]\s*mg\/dL\s*CREATININA/i)?.[1] || "";
       const buncrea = bun && crea ? Math.round(parseFloat(bun) / parseFloat(crea)) : "";
+      const vfg = calculateVFG(parseFloat(crea), parseInt(edad), sexo);
       const acurico = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]mg\/dLÁCIDO ÚRICO/i)?.[1] || "";
 
       // ELECTROLITOS
@@ -294,26 +257,6 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const T4 = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*.g\/dL\s*TETRAIODOTIRONINA\s*\(T4\)/i)?.[1] || "";
       const t4l = exam.content.match(/([\d.,]+)\s*\[[^\]]*\]\s*ng\/dL\s*TETRAIDOTIRONINA LIBRE\s*\(T4L\)/i)?.[1] || "";
       const tsh = exam.content.match(/([\d.,]+)\s*\[[^\]]+\]μUI\/mLHORMONA TIROESTIMULANTE \(TSH\)/i)?.[1] || "";
-
-      // VFGE
-      const creaNum = parseFloat(crea);
-      const edadNum = parseFloat(edad);
-      let vfg = "";
-      if (creaNum && edadNum && sexo) {
-        if (sexo == "FEMENINO" ) {
-          if (creaNum <= 0.7) {
-            vfg = Math.round(143.704 * Math.pow(creaNum/0.7, -0.241) * Math.pow(0.9938, edadNum)).toString();
-          } else {
-            vfg = Math.round(143.704 * Math.pow(creaNum/0.7, -1.2) * Math.pow(0.9938, edadNum)).toString();
-          }
-        } else if (sexo == "MASCULINO") {
-          if (creaNum <= 0.9) {
-            vfg = Math.round(142 * Math.pow(creaNum/0.9, -0.302) * Math.pow(0.9938, edadNum)).toString();
-          } else {
-            vfg = Math.round(142 * Math.pow(creaNum/0.9, -1.2) * Math.pow(0.9938, edadNum)).toString();
-          }
-        }
-      }
 
       const fields = {
         type: exam.type,
