@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 import fs from "fs";
 import path from "path";
-import { Exam } from "@/app/types/exam";
 
 import { Exam } from "@/app/types/exam";
 
@@ -28,7 +27,7 @@ test.describe("PDF Parsing", () => {
       const baseName = path.basename(item, ".pdf");
       const expectedPath = path.join(FIXTURES_DIR, `${baseName}.expected.json`);
 
-      test(`should parse single ${item}`, async ({ request }) => {
+      test(`should parse ${item}`, async ({ request }) => {
         const pdfBuffer = fs.readFileSync(itemPath);
 
         const response = await request.post(BACKEND_URL, {
