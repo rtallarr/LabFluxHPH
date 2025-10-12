@@ -55,6 +55,8 @@ node_modules/
 # E2E fixtures
 /e2e/fixtures/*.pdf
 /e2e/fixtures/*.json
+/e2e/fixtures/sample4/*.pdf
+/e2e/fixtures/sample4/*.json
 
 # Other
 notas.md

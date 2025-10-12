@@ -285,7 +285,10 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
 export const POST = async (req: Request) => {
   try {
     const formData = await req.formData();
-    const files = formData.getAll("files") as File[];
+    const files: File[] = [];
+    for (const entry of formData.values()) {
+      if (entry instanceof File) files.push(entry);
+    }
 
     if (!files.length) {
       return NextResponse.json({ error: "No files uploaded" }, { status: 400 });
