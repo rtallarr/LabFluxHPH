@@ -1,194 +1,155 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { FaGithub, FaRegFileAlt , FaUpload } from "react-icons/fa";
-import { CiWarning } from "react-icons/ci";
+import React, { useState, useRef, JSX } from "react";
+import { FaUpload, FaFlask, FaMicroscope, FaVial } from "react-icons/fa";
 import { toast, Toaster } from "sonner";
 import Image from "next/image";
 
+type ExamType = "Medicina Interna" | "Cultivos";
+
 export default function HomePage() {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<Record<ExamType, File[]>>({
+    "Medicina Interna": [],
+    "Cultivos": [],
+  });
   const [loading, setLoading] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const addFiles = (newFiles: FileList | null) => {
-    if (!newFiles) return;
-    const valid = Array.from(newFiles).filter(
-      (f) => /\.pdf$/i.test(f.name)
-    );
-
-    if (files.length + valid.length > 16) {
-      toast.warning("El numero máximo de archivos a subir es 16.");
-      return;
-    }
-
-    setFiles((prev) => [...prev, ...valid]);
+  const fileInputRefs: Record<ExamType, React.RefObject<HTMLInputElement | null>> = {
+    "Medicina Interna": useRef<HTMLInputElement>(null),
+    "Cultivos": useRef<HTMLInputElement>(null),
   };
 
-  const removeFile = (idx: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== idx));
+  const handleAddFiles = (type: ExamType, fileList: FileList | null) => {
+    if (!fileList) return;
+    const valid = Array.from(fileList).filter(f => /\.pdf$/i.test(f.name));
+    setFiles(prev => ({ ...prev, [type]: [...prev[type], ...valid] }));
   };
 
-  const clearAll = () => {
-    setFiles([]);
+  const handleClear = (type: ExamType) => {
+    setFiles(prev => ({ ...prev, [type]: [] }));
   };
 
-  const handleGenerate = async () => {
-    if (!files.length) {
-      toast.warning("Selecciona al menos un archivo.");
+  const handleGenerate = async (type: ExamType) => {
+    const selectedFiles = files[type];
+    if (!selectedFiles.length) {
+      toast.warning(`Selecciona archivos para ${type}`);
       return;
     }
 
     setLoading(true);
-
     const formData = new FormData();
-    files.forEach((f) => formData.append("files", f));
+    selectedFiles.forEach(f => formData.append("files", f));
 
     try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        body: formData,
-      });
-
+      const res = await fetch("/api/generate", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Server error");
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-
       const a = document.createElement("a");
       a.href = url;
-      a.download = "LabFluxHPH.docx";
+      a.download = `${type.replace(/\s+/g, "_")}_Flujograma.docx`;
       a.click();
       URL.revokeObjectURL(url);
-
-      toast.success("Flujograma generado. Revisa tu descarga.");
+      toast.success(`${type}: Flujograma generado`);
     } catch {
-      toast.error("Error al generar el flujograma.");
+      toast.error(`Error al generar el flujograma de ${type}`);
     } finally {
       setLoading(false);
     }
   };
 
+  const icons: Record<ExamType, JSX.Element> = {
+    "Medicina Interna": <FaVial className="text-red-600 text-5xl" />,
+    "Cultivos": <FaMicroscope className="text-green-600 text-5xl" />,
+  };
+
   return (
     <main className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-blue-900 text-white py-4 flex items-center justify-center gap-6">
+      <header className="bg-blue-900 text-white py-4 flex items-center justify-center gap-6 relative">
         <Image src="/gatosaludando.gif" alt="" width={64} height={64} unoptimized />
         <h1 className="text-4xl font-bold">LabFluxHPH</h1>
         <Image src="/gatosaludando.gif" alt="" width={64} height={64} unoptimized />
-        <a
-          href="https://github.com/rtallarr/LabFluxHPH"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute right-7 top-6 text-white text-2xl hover:text-gray-300"
-        >
-          <FaGithub size={30} />
-        </a>
       </header>
 
-      {/* Main Card */}
-      <div className="max-w-xl mx-auto mt-8 mb-8 p-6 bg-white rounded-2xl shadow-lg transition-all">
-        <p className="text-gray-700 text-center mb-6">
-          Sube 1 o más PDFs con resultados de laboratorio y recibe tu flujograma listo.
-        </p>
-
-        {/* Hidden input */}
-        <input
-          ref={fileInputRef}
-          id="fileInput"
-          type="file"
-          multiple
-          accept=".pdf"
-          className="hidden"
-          onChange={(e) => {
-            addFiles(e.target.files);
-            e.target.value = "";
-          }}
-        />
-
-        {/* Dropzone */}
-        <div
-          className="border-2 border-dashed border-gray-400 rounded-2xl p-12 text-center cursor-pointer hover:border-blue-600 transition-all duration-300"
-          onClick={() => fileInputRef.current?.click()}
-          onDragOver={(e) => {
-            e.preventDefault();
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            addFiles(e.dataTransfer.files);
-          }}
-        >
-          <div className="flex justify-center items-center text-blue-400 text-5xl mb-4">
-            <FaRegFileAlt  />
-          </div>
-          <div className="text-gray-600 font-semibold">
-            Arrastra archivos aquí o haz clic para seleccionarlos
-          </div>
-          <button
-            type="button"
-            className="mt-4 inline-flex items-center px-4 py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition gap-2"
-            onClick={(e) => {
-              e.stopPropagation();
-              fileInputRef.current?.click();
-            }}
-          >
-            <FaUpload />
-            Seleccionar archivos
-          </button>
-        </div>
-
-        {/* File list */}
-        <div className="mt-4 flex flex-wrap gap-2">
-          {files.map((file, idx) => (
+      {/* Grid of Exam Cards */}
+      <section className="max-w-6xl mx-auto mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
+        {Object.keys(files).map((type) => {
+          const examType = type as ExamType;
+          return (
             <div
-              key={idx}
-              className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+              key={examType}
+              className="bg-white rounded-2xl shadow-md p-6 flex flex-col items-center text-center"
             >
-              {file.name} · {(file.size / 1024).toFixed(0)} KB
-              <button
-                onClick={() => removeFile(idx)}
-                className="ml-1 text-red-600 hover:text-red-800"
+              <div className="mb-3">{icons[examType]}</div>
+              <h2 className="text-lg font-semibold mb-3">{examType}</h2>
+
+              <input
+                ref={fileInputRefs[examType]}
+                type="file"
+                multiple
+                accept=".pdf"
+                className="hidden"
+                onChange={(e) => {
+                  handleAddFiles(examType, e.target.files);
+                  e.target.value = "";
+                }}
+              />
+
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-xl p-6 w-full cursor-pointer hover:border-blue-500 transition"
+                onClick={() => fileInputRefs[examType].current?.click()}
               >
-                ✕
-              </button>
+                <p className="text-gray-500 flex flex-col items-center gap-2">
+                  <FaUpload className="text-blue-600" /> Seleccionar PDFs
+                </p>
+              </div>
+
+              {/* File list */}
+              {files[examType].length > 0 && (
+                <div className="mt-3 w-full space-y-1 text-sm text-gray-700">
+                  {files[examType].map((f, idx) => (
+                    <div key={idx} className="flex justify-between bg-blue-50 px-3 py-1 rounded-lg">
+                      <span>{f.name}</span>
+                      <span className="text-gray-500">{(f.size / 1024).toFixed(0)} KB</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Buttons */}
+              <div className="mt-4 flex justify-center gap-3">
+                <button
+                  onClick={() => handleGenerate(examType)}
+                  disabled={loading}
+                  className="bg-blue-900 text-white px-4 py-2 rounded-xl hover:bg-blue-800 transition disabled:opacity-60"
+                >
+                  Generar
+                </button>
+                <button
+                  onClick={() => handleClear(examType)}
+                  className="bg-gray-500 text-white px-4 py-2 rounded-xl hover:bg-gray-400 transition"
+                >
+                  Limpiar
+                </button>
+              </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
+      </section>
 
-        <div className="mt-6 text-center space-y-3">
-          {loading && (
-            <Image src="/loading.gif" alt="Cargando..." width={32} height={32} unoptimized />
-          )}
-
-          {/* Buttons */}
-          <div className="flex justify-center space-x-4">
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="bg-blue-900 text-white px-6 py-2 rounded-2xl font-medium hover:bg-blue-800 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              Generar flujograma
-            </button>
-            <button
-              onClick={clearAll}
-              className="bg-gray-500 text-white px-6 py-2 rounded-2xl font-medium hover:bg-gray-400 transition-all duration-200"
-            >
-              Limpiar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <footer className="bg-gray-200 text-gray-700 py-4 mt-8 text-center mt-auto">
-        <p>Comentarios, sugerencias y problemas dejarlos en <a href="https://github.com/rtallarr/LabFluxHPH/issues" className="underline hover:text-purple-600">github</a></p>
-        <p>&copy; {new Date().getFullYear()} <a href="https://www.tallar.cl" className="hover:text-purple-600">Rodrigo Tallar</a></p>
-        <p className="text-xs text-gray-600">
-          <CiWarning /> LabFluxHPH se proporciona tal cual y no se hace responsables de errores, omisiones u otros problemas derivados de su uso.
+      {/* Footer */}
+      <footer className="bg-gray-200 text-gray-700 py-4 text-center mt-10">
+        <p>
+          &copy; {new Date().getFullYear()}{" "}
+          <a href="https://www.tallar.cl" className="hover:text-purple-600">
+            Rodrigo Tallar
+          </a>
         </p>
       </footer>
-    
-    <Toaster position="top-right" richColors />
+
+      <Toaster position="top-right" richColors />
     </main>
   );
 }
