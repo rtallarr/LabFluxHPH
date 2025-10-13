@@ -300,7 +300,7 @@ export const POST = async (req: Request) => {
       return new NextResponse(JSON.stringify(parsedExams, null, 2), { status: 200 });
     }
 
-    // Separate ORINA vs CULTIVOS vs general exams
+    // Separate ORINA vs general exams
     const orinaExams = parsedExams
       .filter((exam) => exam.type.includes("ORINA COMPLETA"))
       .sort((a, b) => {
@@ -309,16 +309,8 @@ export const POST = async (req: Request) => {
         return dateA.getTime() - dateB.getTime();
     });
 
-    const cultivosExams = parsedExams
-      .filter((exam) => exam.type.includes("CULTIVO"))
-      .sort((a, b) => {
-        const dateA = parseFechaHora(String(a.fecha ?? ""), String(a.hora ?? ""));
-        const dateB = parseFechaHora(String(b.fecha ?? ""), String(b.hora ?? ""));
-        return dateA.getTime() - dateB.getTime();
-    });
-
     const normalExams = parsedExams
-      .filter((exam) => !exam.type.includes("ORINA COMPLETA") && !exam.type.includes("CULTIVO"))
+      .filter((exam) => !exam.type.includes("ORINA COMPLETA"))
       .sort((a, b) => {
         const dateA = parseFechaHora(String(a.fecha ?? ""), String(a.hora ?? ""));
         const dateB = parseFechaHora(String(b.fecha ?? ""), String(b.hora ?? ""));
@@ -328,7 +320,6 @@ export const POST = async (req: Request) => {
     // Assign independent counters
     let orinaCounter = 0;
     let normalCounter = 0;
-    let cultivosCounter = 0;
 
     const skipKeys = ["rut", "nombre", "edad", "sexo"];
 
@@ -342,7 +333,6 @@ export const POST = async (req: Request) => {
 
     const placeholdersArray = [
       ...orinaExams.map((exam) => mapExamWithIndex(exam, ++orinaCounter)),
-      ...cultivosExams.map((exam) => mapExamWithIndex(exam, ++cultivosCounter)),
       ...normalExams.map((exam) => mapExamWithIndex(exam, ++normalCounter, normalCounter > 1)),
     ];
 
