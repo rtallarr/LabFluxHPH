@@ -13,7 +13,7 @@ function splitExams(text: string): { type: string; content: string }[] {
   const sections = text.split(/(?=RECEPCI[OÓ]N\s*:)/g);
 
   const exams: { type: string; content: string }[] = [];
-  const specialExamRegex = /(ORINA COMPLETA.*|.*CULTIVO.*)/gi;
+  const specialExamRegex = /(ORINA COMPLETA|CULTIVO|CITOQU[ÍI]MICO)/i;
 
   for (const section of sections) {
     const trimmedSection = section.trim();
@@ -22,13 +22,12 @@ function splitExams(text: string): { type: string; content: string }[] {
       continue; // skip irrelevant sections
     }
 
-    const matches = [...trimmedSection.matchAll(specialExamRegex)];
+    const match = trimmedSection.match(specialExamRegex);
+    const type = match ? match[0].trim() : "EXÁMENES GENERALES";
 
-    let type: string;
-    if (matches.length === 0) {
-      type = "EXÁMENES GENERALES";
-    } else {
-      type = matches[0][0].trim();
+    if (/(CULTIVO|CITOQU[IÍ]MICO)/i.test(type)) {
+      console.log("Skipping exam type:", type);
+      continue;
     }
 
     // Check if this type already exists
@@ -100,25 +99,6 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
         nombre, rut, edad, sexo, fechaoc, horaoc,
         densoc, phoc, leucosoc, groc, nitritosoc, protoc, cetonasoc, glucosaoc, urobiloc, bilioc,
         globRojos, mucusoc, bactoc, hialoc, granuloc, epiteloc, cristaloc, levadoc,
-      };
-
-    } else if (exam.type.includes("CULTIVOS")) {
-      const fechacul = recepcionMatch?.[1].replace(/-/g, "/") || "";
-      const horacul = recepcionMatch?.[2] || "";
-
-      if (process.env.NODE_ENV === "development") {
-        if (text && nombre && fechacul && horacul) {
-          pdfExportData(text, nombre, fechacul, horacul);
-        } else {
-          pdfExportData(text, "missing", "_data", count.toString());
-        }
-      }
-
-      // CULTIVOS
-
-      return {
-        type: exam.type,
-        nombre, rut, edad, sexo, fechacul, horacul,
       };
 
     } else {
