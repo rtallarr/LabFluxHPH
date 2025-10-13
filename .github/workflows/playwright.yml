@@ -35,8 +35,11 @@ jobs:
       - name: Decrypt sample PDFs
         run: |
           mkdir -p e2e/fixtures
-          for f in e2e/fixtures/*.pdf.gpg; do
+          shopt -s globstar nullglob
+          for f in e2e/fixtures/**/*.pdf.gpg; do
             out="${f%.gpg}"
+            echo "Decrypting $f → $out"
+            mkdir -p "$(dirname "$out")"
             gpg --batch --yes --passphrase "$PDF_SECRET_KEY" -o "$out" -d "$f"
           done
         env:
