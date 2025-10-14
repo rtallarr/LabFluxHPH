@@ -116,7 +116,8 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       // PERFIL HEMATOLÓGICO
       const hto = exam.content.match(/([\d.,]+)\s*%?\s*HEMATOCRITO/i)?.[1] || "";
       const hb = exam.content.match(/([\d.,]+)\s*g\/dL\s*HEMOGLOBINA/i)?.[1] || "";
-      const eritro = exam.content.match(/([\d.,]+)\s*mill[oó]n\/uL\s*(RCTO\.?\s*DE\s*)?ERITROCITOS/i)?.[1] || "";
+      const eritroMatch = exam.content.match(/([\d.,]+)\s*mill[oó]n\/uL\s*(RCTO\.?\s*DE\s*)?ERITROCITOS/i)?.[1] || "";
+      const eritro = eritroMatch ? (parseFloat(eritroMatch) * 1000000) : null;
       const vcm = exam.content.match(/([\d.,]+)\s*fL\s*VCM/i)?.[1] || "";
       const hcm = exam.content.match(/([\d.,]+)\s*pg\s*HCM/i)?.[1] || "";
       //const chcm = exam.content.match(/CHCM\s*[*]?\s*([\d.,]+)/i)?.[1] || "";
