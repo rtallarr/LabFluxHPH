@@ -37,3 +37,20 @@ export function calculateVFG(crea: number, edad: number, sexo: string): string {
 	}
 	return vfg;
 }
+
+export function calculateRPI(hematocrit: number, retic: number, sexo: string): string {
+	if (!hematocrit || !retic || !sexo) return "";
+
+	const normHematocrit = sexo === "FEMENINO" ? 40 : 45;
+	const correctedRetic = retic*hematocrit/normHematocrit;
+
+	if (hematocrit < 15) {
+		return (correctedRetic/2.5).toFixed(2);
+	} else if (hematocrit < 25) {
+		return (correctedRetic/2).toFixed(2);
+	} else if (hematocrit < 35) {
+		return (correctedRetic/1.5).toFixed(2);
+	} else {
+		return correctedRetic.toFixed(2);
+	}
+}

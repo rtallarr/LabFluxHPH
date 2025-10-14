@@ -6,7 +6,7 @@ import Docxtemplater from "docxtemplater";
 import pdf from "pdf-parse";
 
 import { Exam } from "@/app/types/exam";
-import { parseFechaHora, cleanExam, calculateVFG } from "@/app/api/utils/helpers";
+import { parseFechaHora, cleanExam, calculateVFG, calculateRPI } from "@/app/api/utils/helpers";
 import { exportData, pdfExportData } from "@/app/api/utils/logger";
 
 function splitExams(text: string): { type: string; content: string }[] {
@@ -124,6 +124,8 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const plaqMatch = exam.content.match(/([\d.]+)\s*miles\/uL\s*RCTO\.?\s*DE PLAQUETAS/i)?.[1] || "";
       const plaq = plaqMatch ? parseFloat(plaqMatch) * 1000 : null;
       const vhs = exam.content.match(/([\d.,]+)\s*\[.*\]\s*mm\/hrs\s*VHS/i)?.[1] || "";
+      const retic = exam.content.match(/([\d.,]+)\s*\[.*\]\s*%%\s*DE\s*RETICULOCITOS/i)?.[1] || "";
+      const RPI = calculateRPI(parseFloat(hto), parseFloat(retic), sexo);
 
       // HEMATOLÓGICO - CELULAS
       const leucoMatch = exam.content.match(/([\d.]+)\s*(miles\/uL|mill[óo]n\/uL)?\s*RCTO\.?\s*DE LEUCOCITOS/i);
@@ -242,7 +244,7 @@ async function parseLabPdf(buffer: Buffer, count: number): Promise<Exam[]> {
       const fields = {
         type: exam.type,
         nombre, rut, edad, sexo, fecha, hora,
-        hto, hb, vcm, hcm, plaq, vhs, leuco, neu, linfocitos, mono, eosin, basofilos, eritro,
+        hto, hb, vcm, hcm, plaq, vhs, RPI, leuco, neu, linfocitos, mono, eosin, basofilos, eritro,
         fierro, tibc, uibc, satFe,
         pcr, lactico, ldh, tropo, ck, ckmb, dimd, procal,
         bun, crea, buncrea, vfg, acurico,
