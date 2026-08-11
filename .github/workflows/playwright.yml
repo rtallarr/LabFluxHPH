@@ -34,6 +34,12 @@ jobs:
 
       - name: Decrypt sample PDFs
         run: |
+          set -euo pipefail
+          if [ -z "${PDF_SECRET_KEY:-}" ]; then
+            echo "PDF_SECRET_KEY is not set"
+            exit 1
+          fi
+
           mkdir -p e2e/fixtures
           shopt -s globstar nullglob
           for f in e2e/fixtures/**/*.pdf.gpg; do
